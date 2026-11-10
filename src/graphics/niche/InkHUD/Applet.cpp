@@ -778,6 +778,20 @@ void InkHUD::Applet::drawHeader(const std::string &text)
         drawPixel(x, headerDivY, BLACK); // Dotted 50%
     }
 
+#ifdef T_DECK_MAX
+    // Menu icon (three bars in a box) just left of the battery icon: tap it to open the menu.
+    // Only drawn on full-width tiles; Events::onTouchTap uses the same position.
+    if (width() == inkhud->width()) {
+        const int16_t iconH = getHeaderHeight() - 4;
+        const int16_t iconW = 18;
+        const int16_t iconR = width() - (int16_t)(iconH * 1.8) - 10; // right edge, clear of the battery
+        const int16_t iconL = iconR - iconW;
+        drawRect(iconL, 1, iconW, iconH, BLACK);
+        for (int16_t i = 1; i <= 3; i++)
+            drawLine(iconL + 3, 1 + (iconH * i) / 4, iconL + iconW - 4, 1 + (iconH * i) / 4, BLACK);
+    }
+#endif
+
     // Dither near battery
     if (settings->optionalFeatures.batteryIcon) {
         constexpr uint16_t ditherSizePx = 4;

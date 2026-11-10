@@ -30,9 +30,12 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
 
 #ifdef T_DECK_MAX
     // The three touch keys under the screen of the T-Deck Max, counted left to right:
-    // 0 = heart, 1 = speech bubble, 2 = arrow.
-    //   heart / arrow: previous / next screen, or previous / next item while a menu is open
-    //   bubble:        open the menu, or choose the highlighted item
+    // 0 = heart, 1 = speech bubble, 2 = arrow. Outside menus they are fixed shortcuts:
+    //   heart:  favourites map (recent nodes if the map is not enabled)
+    //   bubble: messages (channel 0, pressed again: direct messages)
+    //   arrow:  next screen
+    // With the menu open: heart / arrow move up / down, bubble chooses. While typing: heart cancels, bubble sends.
+    // The menu itself opens from the icon in the top right corner (see Events::onTouchTap).
     void touchKey(uint8_t id)
     {
         auto *hud = NicheGraphics::InkHUD::InkHUD::getInstance();
@@ -43,20 +46,28 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
             typing |= applet->handleFreeText;
             systemHandlingInput |= applet->handleInput;
         }
+        // Positions in the list of user applets, in the order they are added in nicheGraphics.h
+        constexpr uint8_t APPLET_DMS = 1, APPLET_CHANNEL0 = 2, APPLET_RECENTS = 6, APPLET_FAVORITES_MAP = 8;
         switch (id) {
         case 0:
             if (typing)
                 hud->freeTextCancel();
             else if (systemHandlingInput)
                 hud->touchNavUp();
-            else
-                hud->prevApplet();
+            else if (!hud->showApplet(APPLET_FAVORITES_MAP))
+                hud->showApplet(APPLET_RECENTS);
             break;
         case 1:
             if (typing)
                 hud->freeTextDone();
-            else
+            else if (systemHandlingInput)
                 hud->longpress();
+            else {
+                auto *active = hud->getActiveApplet();
+                const bool onChannel0 = hud->userApplets.size() > APPLET_CHANNEL0 && active == hud->userApplets.at(APPLET_CHANNEL0);
+                if (!hud->showApplet(onChannel0 ? APPLET_DMS : APPLET_CHANNEL0))
+                    hud->showApplet(APPLET_CHANNEL0);
+            }
             break;
         case 2:
             if (typing)

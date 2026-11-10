@@ -59,8 +59,8 @@ void setupNicheGraphics()
                       false); // Activated, not autoshown
     inkhud->addApplet("Heard", new InkHUD::HeardApplet, true, false,
                       0); // Activated, not autoshown, default on tile 0
-    inkhud->addApplet("Favorites Map", new InkHUD::FavoritesMapApplet, false,
-                      false); // Not Active, not autoshown
+    inkhud->addApplet("Favorites Map", new InkHUD::FavoritesMapApplet, true,
+                      false); // Activated (heart key), not autoshown
 
     inkhud->begin();
     settings.optionalMenuItems.backlight = false;

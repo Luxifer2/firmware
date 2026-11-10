@@ -383,6 +383,16 @@ void InkHUD::Events::onTouchTap(uint16_t x, uint16_t y, bool longPress)
         }
     }
 
+#ifdef T_DECK_MAX
+    // Menu icon in the top right corner (drawn by Applet::drawHeader): tap to open the menu.
+    if (!longPress && y <= Applet::getHeaderHeight() + 6 && x >= inkhud->width() - 80) {
+        noteInkHUDUserInteraction();
+        playChirp();
+        inkhud->openMenu();
+        return;
+    }
+#endif
+
     // In split layouts, tapping a different tile changes focus.
     // Consume this tap so selection does not also trigger button fallback behavior.
     if (inkhud->selectTileAt(x, y)) {
