@@ -10,6 +10,9 @@
 #include "./Applets/System/Menu/MenuApplet.h"
 #include "./Applets/System/Notification/NotificationApplet.h"
 #include "./Applets/System/Notification/TouchStatusApplet.h"
+#ifdef T_DECK_MAX
+#include "./Applets/Max/LockApplet.h"
+#endif
 #include "./Applets/System/Pairing/PairingApplet.h"
 #include "./Applets/System/Placeholder/PlaceholderApplet.h"
 #include "./Applets/System/Tips/TipsApplet.h"
@@ -578,6 +581,9 @@ void InkHUD::WindowManager::addSystemApplet(const char *name, SystemApplet *appl
 void InkHUD::WindowManager::createSystemApplets()
 {
     addSystemApplet("Logo", new LogoApplet, new Tile);
+#ifdef T_DECK_MAX
+    addSystemApplet("Lock", new LockApplet, new Tile);
+#endif
     addSystemApplet("Pairing", new PairingApplet, new Tile);
     addSystemApplet("Tips", new TipsApplet, new Tile);
     if (settings->joystick.enabled && !inkhud->twoWayRocker) {
@@ -611,6 +617,9 @@ void InkHUD::WindowManager::createSystemApplets()
 void InkHUD::WindowManager::placeSystemTiles()
 {
     inkhud->getSystemApplet("Logo")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
+#ifdef T_DECK_MAX
+    inkhud->getSystemApplet("Lock")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
+#endif
     inkhud->getSystemApplet("Pairing")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
     inkhud->getSystemApplet("Tips")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
     if (settings->joystick.enabled && !inkhud->twoWayRocker) {

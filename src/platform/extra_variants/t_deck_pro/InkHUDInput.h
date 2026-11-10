@@ -13,8 +13,16 @@
 #include "modules/SystemCommandsModule.h"
 #include "sleep.h"
 #include <cstring>
+#ifdef T_DECK_MAX
+#include "graphics/niche/InkHUD/Applets/Max/LockApplet.h"
+#include "graphics/niche/InkHUD/Applets/Max/MaxUi.h"
+#endif
 
 void attachTDeckProTouchInterrupt();
+
+#ifdef T_DECK_MAX
+enum class TDeckMaxKeyEvent : uint8_t { TAP, DOUBLE, HOLD };
+#endif
 
 class TDeckProInkHUDInput : public Observer<const InputEvent *>
 {
@@ -31,31 +39,47 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
 #ifdef T_DECK_MAX
     // The three touch keys under the screen of the T-Deck Max, counted left to right:
     // 0 = heart, 1 = speech bubble, 2 = arrow. Outside menus they are fixed shortcuts:
-    //   heart:  favourites map (recent nodes if the map is not enabled)
-    //   bubble: messages (channel 0, pressed again: direct messages)
+    //   heart:  friends (favourites map; recent nodes if the map is not enabled)
+    //   bubble: chat (channel 0, pressed again: direct messages)
     //   arrow:  next screen
+    //   heart held for 1.5 s (or tapped twice): lock / unlock the screen
     // With the menu open: heart / arrow move up / down, bubble chooses. While typing: heart cancels, bubble sends.
     // The menu itself opens from the icon in the top right corner (see Events::onTouchTap).
-    void touchKey(uint8_t id)
+    void touchKey(uint8_t id, TDeckMaxKeyEvent event)
     {
         auto *hud = NicheGraphics::InkHUD::InkHUD::getInstance();
         powerFSM.trigger(EVENT_INPUT);
+
+        // Locked: only the unlock gesture does anything
+        auto *lockApplet = hud->getSystemApplet("Lock");
+        if (lockApplet && lockApplet->isForeground()) {
+            if (id == 0 && event != TDeckMaxKeyEvent::TAP)
+                NicheGraphics::InkHUD::LockApplet::unlock(hud);
+            return;
+        }
+
         bool typing = false;
         bool systemHandlingInput = false;
         for (auto *applet : hud->systemApplets) {
             typing |= applet->handleFreeText;
             systemHandlingInput |= applet->handleInput;
         }
-        // Positions in the list of user applets, in the order they are added in nicheGraphics.h
-        constexpr uint8_t APPLET_DMS = 1, APPLET_CHANNEL0 = 2, APPLET_RECENTS = 6, APPLET_FAVORITES_MAP = 8;
+
+        if (id == 0 && event != TDeckMaxKeyEvent::TAP && !typing) {
+            NicheGraphics::InkHUD::LockApplet::lock(hud);
+            return;
+        }
+        if (event == TDeckMaxKeyEvent::HOLD)
+            return;
+
         switch (id) {
         case 0:
             if (typing)
                 hud->freeTextCancel();
             else if (systemHandlingInput)
                 hud->touchNavUp();
-            else if (!hud->showApplet(APPLET_FAVORITES_MAP))
-                hud->showApplet(APPLET_RECENTS);
+            else if (!hud->showApplet(MaxUi::A_FAVORITES))
+                hud->showApplet(MaxUi::A_RECENTS);
             break;
         case 1:
             if (typing)
@@ -63,10 +87,12 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
             else if (systemHandlingInput)
                 hud->longpress();
             else {
+                tDeckMaxUnread = 0;
                 auto *active = hud->getActiveApplet();
-                const bool onChannel0 = hud->userApplets.size() > APPLET_CHANNEL0 && active == hud->userApplets.at(APPLET_CHANNEL0);
-                if (!hud->showApplet(onChannel0 ? APPLET_DMS : APPLET_CHANNEL0))
-                    hud->showApplet(APPLET_CHANNEL0);
+                const bool onChannel0 =
+                    hud->userApplets.size() > MaxUi::A_CHANNEL0 && active == hud->userApplets.at(MaxUi::A_CHANNEL0);
+                if (!hud->showApplet(onChannel0 ? MaxUi::A_DMS : MaxUi::A_CHANNEL0))
+                    hud->showApplet(MaxUi::A_CHANNEL0);
             }
             break;
         case 2:

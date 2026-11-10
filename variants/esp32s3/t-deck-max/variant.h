@@ -12,6 +12,12 @@ void tDeckProToggleBacklights();
 #define EXT_NOTIFY_VIBRA_WRITE(pin, on) tDeckProSetVibration(pin, on)
 #endif
 
+// Shared with the home and lock screens (defined in src/platform/extra_variants/t_deck_max/variant.cpp)
+#ifdef MESHTASTIC_INCLUDE_INKHUD
+extern uint16_t tDeckMaxUnread; // messages received and not yet looked at
+extern char tDeckMaxDiag[48];   // last key event seen, shown at the bottom of the home screen while testing
+#endif
+
 // Display (E-Ink, GDEQ031T10)
 #define PIN_EINK_CS 34
 #define PIN_EINK_BUSY 37

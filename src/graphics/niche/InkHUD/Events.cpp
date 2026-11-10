@@ -553,6 +553,11 @@ int InkHUD::Events::onReceiveTextMessage(const meshtastic_MeshPacket *packet)
     if (!messageStore.shouldStorePacket(*packet))
         return 0;
 
+#ifdef T_DECK_MAX
+    if (tDeckMaxUnread < 99)
+        tDeckMaxUnread++;
+#endif
+
     bool isBroadcastMsg = isBroadcast(packet->to);
     inkhud->persistence->latestMessage.wasBroadcast = isBroadcastMsg;
 

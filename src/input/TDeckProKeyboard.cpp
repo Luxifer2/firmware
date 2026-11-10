@@ -73,6 +73,10 @@ void TDeckProKeyboard::trigger()
         // keys.
         const uint8_t event = readRegister(TCA8418_REG_KEY_EVENT_A);
         const uint8_t key = event & 0x7F;
+#if defined(T_DECK_MAX) && defined(MESHTASTIC_INCLUDE_INKHUD)
+        if (event & 0x80)
+            snprintf(tDeckMaxDiag, sizeof(tDeckMaxDiag), "TASTIERA: codice %u", key);
+#endif
         if (event & 0x80)
             pressed(key);
         else

@@ -9,6 +9,7 @@
 #include "graphics/niche/Inputs/TwoButton.h"
 // Applets
 #include "graphics/niche/InkHUD/Applets/Bases/Map/SDMapTiles.h"
+#include "graphics/niche/InkHUD/Applets/Max/HomeApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/AllMessage/AllMessageApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/DM/DMApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/FavoritesMap/FavoritesMapApplet.h"
@@ -61,6 +62,9 @@ void setupNicheGraphics()
                       0); // Activated, not autoshown, default on tile 0
     inkhud->addApplet("Favorites Map", new InkHUD::FavoritesMapApplet, true,
                       false); // Activated (heart key), not autoshown
+
+    // Home screen: keep this last, its position in the list is fixed in MaxUi::A_HOME
+    inkhud->addApplet("Home", new InkHUD::HomeApplet, true, false);
 
     inkhud->begin();
     settings.optionalMenuItems.backlight = false;

@@ -33,23 +33,41 @@ static TDeckProInkHUDInput *tDeckMaxKeyInput = nullptr;
 void tDeckMaxTouchKey(uint8_t id, bool pressed)
 {
     LOG_DEBUG("Touch key %u %s", id, pressed ? "down" : "up");
+    if (pressed)
+        snprintf(tDeckMaxDiag, sizeof(tDeckMaxDiag), "TOCCO: tasto %u", id); // shown on the home screen while testing
     if (id >= 3)
         return;
-    // One physical press can produce several reports: act once per press, and ignore bounces.
+    // One press can be reported many times: turn the reports into one tap, and add "hold" and "double tap".
     static bool down[3] = {false, false, false};
+    static bool holdFired[3] = {false, false, false};
+    static uint32_t firstMs[3] = {0, 0, 0};
+    static uint32_t lastReportMs[3] = {0, 0, 0};
     static uint32_t lastActionMs[3] = {0, 0, 0};
+    static uint32_t lastTapMs[3] = {0, 0, 0};
     if (!pressed) {
         down[id] = false;
         return;
     }
+    const bool sameGesture = down[id] && !Throttle::hasElapsed(lastReportMs[id], 400);
+    lastReportMs[id] = millis();
+    if (sameGesture) {
+        // still the same press: after 1.5 s it counts as "hold"
+        if (!holdFired[id] && Throttle::hasElapsed(firstMs[id], 1500)) {
+            holdFired[id] = true;
+            if (tDeckMaxKeyInput)
+                tDeckMaxKeyInput->touchKey(id, TDeckMaxKeyEvent::HOLD);
+        }
+        return;
+    }
     if (Throttle::isWithinTimespanMs(lastActionMs[id], 150))
         return; // bounce
-    if (down[id] && Throttle::isWithinTimespanMs(lastActionMs[id], 600))
-        return; // same press still being reported
     down[id] = true;
-    lastActionMs[id] = millis();
+    holdFired[id] = false;
+    firstMs[id] = millis();
+    const bool isDouble = lastTapMs[id] != 0 && Throttle::isWithinTimespanMs(lastTapMs[id], 900);
+    lastActionMs[id] = lastTapMs[id] = millis();
     if (tDeckMaxKeyInput)
-        tDeckMaxKeyInput->touchKey(id);
+        tDeckMaxKeyInput->touchKey(id, isDouble ? TDeckMaxKeyEvent::DOUBLE : TDeckMaxKeyEvent::TAP);
 }
 #else
 void tDeckMaxTouchKey(uint8_t, bool) {}

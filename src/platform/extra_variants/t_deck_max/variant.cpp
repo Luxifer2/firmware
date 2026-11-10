@@ -5,6 +5,11 @@
 
 #include <Wire.h>
 
+#ifdef MESHTASTIC_INCLUDE_INKHUD
+uint16_t tDeckMaxUnread = 0;
+char tDeckMaxDiag[48] = "";
+#endif
+
 // ---------------------------------------------------------------------------------------------
 // XL9555 IO expander (address 0x20). On the T-Deck Max it switches power and reset lines:
 //   port 0: IO00 modem power, IO01 LoRa power, IO02 GPS power, IO03 1.8V rail (gyroscope),
