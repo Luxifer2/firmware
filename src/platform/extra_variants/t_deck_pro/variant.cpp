@@ -33,7 +33,22 @@ static TDeckProInkHUDInput *tDeckMaxKeyInput = nullptr;
 void tDeckMaxTouchKey(uint8_t id, bool pressed)
 {
     LOG_DEBUG("Touch key %u %s", id, pressed ? "down" : "up");
-    if (pressed && tDeckMaxKeyInput)
+    if (id >= 3)
+        return;
+    // One physical press can produce several reports: act once per press, and ignore bounces.
+    static bool down[3] = {false, false, false};
+    static uint32_t lastActionMs[3] = {0, 0, 0};
+    if (!pressed) {
+        down[id] = false;
+        return;
+    }
+    if (Throttle::isWithinTimespanMs(lastActionMs[id], 150))
+        return; // bounce
+    if (down[id] && Throttle::isWithinTimespanMs(lastActionMs[id], 600))
+        return; // same press still being reported
+    down[id] = true;
+    lastActionMs[id] = millis();
+    if (tDeckMaxKeyInput)
         tDeckMaxKeyInput->touchKey(id);
 }
 #else
