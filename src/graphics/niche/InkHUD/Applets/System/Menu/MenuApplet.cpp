@@ -2383,7 +2383,11 @@ void InkHUD::MenuApplet::onNavUp()
         // Touch-first menus: swipe up/down should scroll only.
         // Keep cursor movement for scroll math, but selection box is hidden in onRender().
         if (useTouchFriendlyMenuLayout(inkhud)) {
+            #ifdef T_DECK_MAX
+            hideTouchSelectionHighlight = false; // T-Deck Max: the touch keys move a visible cursor
+            #else
             hideTouchSelectionHighlight = true;
+            #endif
             if (!cursorShown) {
                 cursorShown = true;
                 cursor = items.size() - 1;
@@ -2438,7 +2442,11 @@ void InkHUD::MenuApplet::onNavDown()
         // Touch-first menus: swipe up/down should scroll only.
         // Keep cursor movement for scroll math, but selection box is hidden in onRender().
         if (useTouchFriendlyMenuLayout(inkhud)) {
+            #ifdef T_DECK_MAX
+            hideTouchSelectionHighlight = false; // T-Deck Max: the touch keys move a visible cursor
+            #else
             hideTouchSelectionHighlight = true;
+            #endif
             if (!cursorShown) {
                 cursorShown = true;
                 cursor = 0;
