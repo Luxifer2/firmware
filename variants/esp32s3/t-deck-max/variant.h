@@ -15,7 +15,9 @@ void tDeckProToggleBacklights();
 // Shared with the home and lock screens (defined in src/platform/extra_variants/t_deck_max/variant.cpp)
 #ifdef MESHTASTIC_INCLUDE_INKHUD
 extern uint16_t tDeckMaxUnread; // messages received and not yet looked at
-extern char tDeckMaxDiag[48];   // last key event seen, shown at the bottom of the home screen while testing
+extern char tDeckMaxDiag[48]; // last key event seen (diagnostics)
+bool tDeckMaxGetLight(uint8_t which);          // 0 = screen light, 1 = keyboard light
+void tDeckMaxSetLight(uint8_t which, bool on);
 #endif
 
 // Display (E-Ink, GDEQ031T10)

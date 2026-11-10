@@ -136,16 +136,26 @@ std::string InkHUD::RecentsListApplet::getHeaderText()
     std::string text;
 
     // Print the length of our "Recents" time-window
+#ifdef T_DECK_MAX
+    text += "Ultimi ";
+    text += to_string(settings->recentlyActiveSeconds / 60);
+    text += " min";
+#else
     text += "Last ";
     text += to_string(settings->recentlyActiveSeconds / 60);
     text += " mins";
+#endif
 
     // Print the node count
     const uint16_t nodeCount = ages.size();
     text += ": ";
     text += to_string(nodeCount);
     text += " ";
+#ifdef T_DECK_MAX
+    text += (nodeCount == 1) ? "nodo" : "nodi";
+#else
     text += (nodeCount == 1) ? "node" : "nodes";
+#endif
 
     return text;
 }

@@ -70,6 +70,9 @@ bool InkHUD::HomeApplet::onTouchPoint(uint16_t x, uint16_t y, bool longPress)
         if (!inkhud->showApplet(MaxUi::A_FAVORITES))
             inkhud->showApplet(MaxUi::A_RECENTS);
         return true;
+    case MaxUi::T_CONTROLS:
+        inkhud->showApplet(MaxUi::A_CONTROLS);
+        return true;
     case MaxUi::T_OPTIONS:
         inkhud->openMenu();
         return true;
@@ -99,8 +102,7 @@ int32_t InkHUD::HomeApplet::runOnce()
     if (isForeground()) {
         MaxUi::Info info;
         gatherMaxInfo(info);
-        const bool diagChanged = strncmp(renderedDiag, info.diag ? info.diag : "", sizeof(renderedDiag) - 1) != 0;
-        if (info.mm != renderedMinute || info.unread != renderedUnread || diagChanged)
+        if (info.mm != renderedMinute || info.unread != renderedUnread)
             requestUpdate(Drivers::EInk::UpdateTypes::FAST);
     }
     return 5 * 1000UL;

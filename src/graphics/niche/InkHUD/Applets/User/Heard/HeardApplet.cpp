@@ -112,13 +112,21 @@ std::string InkHUD::HeardApplet::getHeaderText()
 {
     uint16_t nodeCount = nodeDB->getNumMeshNodes() - 1; // Don't count our own node
 
+#ifdef T_DECK_MAX
+    std::string text = "Nodi sentiti: ";
+#else
     std::string text = "Heard: ";
+#endif
 
     // Print node count, if nodeDB not yet nearing full
     if (nodeCount < MAX_NUM_NODES) {
         text += to_string(nodeCount); // Max nodes
         text += " ";
+#ifdef T_DECK_MAX
+        text += (nodeCount == 1) ? "nodo" : "nodi";
+#else
         text += (nodeCount == 1) ? "node" : "nodes";
+#endif
     }
 
     return text;

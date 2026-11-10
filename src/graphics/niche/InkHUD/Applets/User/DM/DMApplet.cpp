@@ -43,7 +43,12 @@ void InkHUD::DMApplet::onRender(bool full)
 {
     // Abort if no text message
     if (!latestMessage->dm.sender || !messageStore.isMessageVisible(latestMessage->dm)) {
+#ifdef T_DECK_MAX
+        printAt(X(0.5), Y(0.5) - (getFont().lineHeight() / 2), "Nessun messaggio", CENTER, MIDDLE);
+        printAt(X(0.5), Y(0.5) + (getFont().lineHeight() / 2), "diretto ancora", CENTER, MIDDLE);
+#else
         printAt(X(0.5), Y(0.5), "No DMs", CENTER, MIDDLE);
+#endif
         return;
     }
 

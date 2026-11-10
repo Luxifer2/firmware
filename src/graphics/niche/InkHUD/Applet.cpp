@@ -3,6 +3,9 @@
 #ifdef MESHTASTIC_INCLUDE_INKHUD
 
 #include "./Applet.h"
+#ifdef T_DECK_MAX
+#include "./Applets/Max/MaxUi.h"
+#endif
 
 #include "main.h"
 
@@ -768,7 +771,18 @@ void InkHUD::Applet::drawHeader(const std::string &text)
     const int16_t headerDivY = padDivH + fontSmall.lineHeight() + padDivH - 1;
 
     // Print header
+#ifdef T_DECK_MAX
+    // Small hexagon at the left (tap: home screen), title after it
+    if (width() == inkhud->width()) {
+        const int16_t hy = headerDivY / 2;
+        MaxUi::hex(*this, 10, hy, 7, BLACK);
+        fillRect(8, hy - 2, 5, 5, BLACK);
+        printAt(24, padDivH, text);
+    } else
+        printAt(0, padDivH, text);
+#else
     printAt(0, padDivH, text);
+#endif
 
     // Divider
     // - below header text: separates message

@@ -41,7 +41,8 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
     // 0 = heart, 1 = speech bubble, 2 = arrow. Outside menus they are fixed shortcuts:
     //   heart:  friends (favourites map; recent nodes if the map is not enabled)
     //   bubble: chat (channel 0, pressed again: direct messages)
-    //   arrow:  next screen
+    //   arrow:  home screen (also the side button that cannot be told apart from it)
+    //   arrow held for 1.5 s: screen and keyboard lights on / off
     //   heart held for 1.5 s (or tapped twice): lock / unlock the screen
     // With the menu open: heart / arrow move up / down, bubble chooses. While typing: heart cancels, bubble sends.
     // The menu itself opens from the icon in the top right corner (see Events::onTouchTap).
@@ -69,8 +70,11 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
             NicheGraphics::InkHUD::LockApplet::lock(hud);
             return;
         }
-        if (event == TDeckMaxKeyEvent::HOLD)
+        if (event == TDeckMaxKeyEvent::HOLD) {
+            if (id == 2 && !typing && !systemHandlingInput)
+                tDeckProToggleBacklights();
             return;
+        }
 
         switch (id) {
         case 0:
@@ -101,7 +105,7 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
             if (systemHandlingInput)
                 hud->touchNavDown();
             else
-                hud->nextApplet();
+                hud->showApplet(MaxUi::A_HOME);
             break;
         default:
             break;

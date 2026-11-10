@@ -47,7 +47,11 @@ void InkHUD::AllMessageApplet::onRender(bool full)
 
     // Short circuit: no text message
     if (!message->sender || !messageStore.isMessageVisible(*message)) {
+#ifdef T_DECK_MAX
+        printAt(X(0.5), Y(0.5), "Nessun messaggio", CENTER, MIDDLE);
+#else
         printAt(X(0.5), Y(0.5), "No Message", CENTER, MIDDLE);
+#endif
         return;
     }
 

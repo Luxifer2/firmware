@@ -45,7 +45,8 @@ static void xl9555Write(uint8_t reg, uint8_t value)
 
 static Adafruit_DRV2605 haptic;
 static bool hapticReady = false;
-static bool backlightsEnabled = false;
+static bool screenLightEnabled = false;
+static bool keyLightEnabled = false;
 static concurrency::Periodic *touchFeedbackTimer = nullptr;
 
 static int32_t stopTouchFeedback()
@@ -76,14 +77,31 @@ bool tDeckProIsV11()
 
 void tDeckProUpdateBacklights(bool sleeping)
 {
-    const bool on = backlightsEnabled && !sleeping && !NicheGraphics::InkHUD::InkHUD::getInstance()->isTouchTimedOut();
-    digitalWrite(KB_BL_PIN, on);
-    analogWrite(PIN_EINK_FRONTLIGHT, on ? 64 : 0);
+    const bool allowed = !sleeping && !NicheGraphics::InkHUD::InkHUD::getInstance()->isTouchTimedOut();
+    digitalWrite(KB_BL_PIN, keyLightEnabled && allowed);
+    analogWrite(PIN_EINK_FRONTLIGHT, (screenLightEnabled && allowed) ? 64 : 0);
 }
 
+// Both lights together (the old single switch): if either is on they go off, otherwise both come on
 void tDeckProToggleBacklights()
 {
-    backlightsEnabled = !backlightsEnabled;
+    const bool anyOn = screenLightEnabled || keyLightEnabled;
+    screenLightEnabled = keyLightEnabled = !anyOn;
+    tDeckProUpdateBacklights();
+}
+
+// which: 0 = screen light, 1 = keyboard light
+bool tDeckMaxGetLight(uint8_t which)
+{
+    return which == 0 ? screenLightEnabled : keyLightEnabled;
+}
+
+void tDeckMaxSetLight(uint8_t which, bool on)
+{
+    if (which == 0)
+        screenLightEnabled = on;
+    else
+        keyLightEnabled = on;
     tDeckProUpdateBacklights();
 }
 

@@ -1,6 +1,9 @@
 #ifdef MESHTASTIC_INCLUDE_INKHUD
 
 #include "./Events.h"
+#ifdef T_DECK_MAX
+#include "./Applets/Max/MaxUi.h"
+#endif
 
 #include "MessageStore.h"
 #include "PowerFSM.h"
@@ -384,6 +387,14 @@ void InkHUD::Events::onTouchTap(uint16_t x, uint16_t y, bool longPress)
     }
 
 #ifdef T_DECK_MAX
+    // Hexagon in the top left corner (drawn by Applet::drawHeader): tap to go to the home screen.
+    if (!longPress && y <= Applet::getHeaderHeight() + 6 && x <= 28) {
+        noteInkHUDUserInteraction();
+        playChirp();
+        inkhud->showApplet(MaxUi::A_HOME);
+        return;
+    }
+
     // Menu icon in the top right corner (drawn by Applet::drawHeader): tap to open the menu.
     if (!longPress && y <= Applet::getHeaderHeight() + 6 && x >= inkhud->width() - 80) {
         noteInkHUDUserInteraction();

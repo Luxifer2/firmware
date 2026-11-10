@@ -453,8 +453,13 @@ void InkHUD::MapApplet::onRender(bool full)
 
     // Show placeholder only if we have no position at all - no tiles, no own node
     if (!enoughMarkers() && !centerIsOurNode) {
+#ifdef T_DECK_MAX
+        printAt(X(0.5), Y(0.5) - (getFont().lineHeight() / 2), "Qui vedrai la posizione", CENTER, MIDDLE);
+        printAt(X(0.5), Y(0.5) + (getFont().lineHeight() / 2), "dei nodi vicini", CENTER, MIDDLE);
+#else
         printAt(X(0.5), Y(0.5) - (getFont().lineHeight() / 2), "Node positions", CENTER, MIDDLE);
         printAt(X(0.5), Y(0.5) + (getFont().lineHeight() / 2), "will appear here", CENTER, MIDDLE);
+#endif
         return;
     }
 

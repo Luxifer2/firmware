@@ -18,7 +18,7 @@ constexpr uint16_t K = 0; // black
 constexpr uint16_t W = 1; // white
 
 // Positions in the list of user applets (the order they are added in the variant's nicheGraphics.h)
-enum AppletIndex : uint8_t { A_DMS = 1, A_CHANNEL0 = 2, A_POSITIONS = 4, A_RECENTS = 6, A_HEARD = 7, A_FAVORITES = 8, A_HOME = 9 };
+enum AppletIndex : uint8_t { A_DMS = 1, A_CHANNEL0 = 2, A_POSITIONS = 4, A_RECENTS = 6, A_HEARD = 7, A_FAVORITES = 8, A_HOME = 9, A_CONTROLS = 10 };
 
 enum Font : uint8_t { SMALL = 0, MEDIUM = 1, LARGE = 2 };
 enum Align : uint8_t { LEFT = 0, CENTER = 1, RIGHT = 2 };
@@ -407,45 +407,43 @@ template <class G> void divider(G &g, int x0, int x1, int y, uint16_t c)
 // Home screen
 // ------------------------------------------------------------------------------------------------
 
-// Seven hexagons in a honeycomb: two, three, two
-enum Tile : uint8_t { T_MESSAGES, T_DIRECT, T_NODES, T_MAP, T_FAVORITES, T_OPTIONS, T_LOCK, T_COUNT };
+// Eight hexagons in a honeycomb: three, two, three
+enum Tile : uint8_t { T_MESSAGES, T_DIRECT, T_NODES, T_MAP, T_FAVORITES, T_CONTROLS, T_OPTIONS, T_LOCK, T_COUNT };
 
 struct HomeLayout {
     int hexR;
     int hexCx[T_COUNT], hexCy[T_COUNT];
     int menuCx, menuCy, menuR;
     int statusY;
-    int hintY;
-    int hintLineY;
 };
 
 inline HomeLayout homeLayout(int w, int h)
 {
+    (void)h;
     HomeLayout L;
-    int r = (int)((w - 20) / (3.0f * SQRT3));
-    if (r > 36)
-        r = 36;
+    int r = (int)((w - 16) / (3.0f * SQRT3));
+    if (r > 42)
+        r = 42;
     L.hexR = r;
     const float hexW = r * SQRT3;
     const int step = (int)(1.5f * r) + 2;
-    const int top = 74 + r;
+    const int top = 72 + r;
     const int mid = w / 2;
-    // row 0: tiles 0, 1   row 1: tiles 2, 3, 4   row 2: tiles 5, 6
-    L.hexCx[0] = mid - (int)(hexW / 2.0f);
-    L.hexCx[1] = mid + (int)(hexW / 2.0f);
-    L.hexCx[2] = mid - (int)hexW;
-    L.hexCx[3] = mid;
-    L.hexCx[4] = mid + (int)hexW;
-    L.hexCx[5] = mid - (int)(hexW / 2.0f);
-    L.hexCx[6] = mid + (int)(hexW / 2.0f);
+    // row 0: tiles 0, 1, 2   row 1: tiles 3, 4   row 2: tiles 5, 6, 7
+    L.hexCx[0] = mid - (int)hexW;
+    L.hexCx[1] = mid;
+    L.hexCx[2] = mid + (int)hexW;
+    L.hexCx[3] = mid - (int)(hexW / 2.0f);
+    L.hexCx[4] = mid + (int)(hexW / 2.0f);
+    L.hexCx[5] = mid - (int)hexW;
+    L.hexCx[6] = mid;
+    L.hexCx[7] = mid + (int)hexW;
     for (int i = 0; i < T_COUNT; i++)
-        L.hexCy[i] = top + (i < 2 ? 0 : (i < 5 ? step : 2 * step));
+        L.hexCy[i] = top + (i < 3 ? 0 : (i < 5 ? step : 2 * step));
     L.menuR = 13;
     L.menuCx = w - 58;
     L.menuCy = 17;
     L.statusY = 47;
-    L.hintLineY = h - 56;
-    L.hintY = h - 43;
     return L;
 }
 
@@ -465,9 +463,20 @@ inline bool homeMenuAt(int w, int h, int x, int y)
     return (x - L.menuCx) * (x - L.menuCx) + (y - L.menuCy) * (y - L.menuCy) <= 20 * 20;
 }
 
+// Sliders (controls icon): three lines with knobs
+template <class G> void iconSliders(G &g, int cx, int cy, uint16_t c)
+{
+    const int kn[3] = {-5, 4, -2};
+    for (int i = 0; i < 3; i++) {
+        const int y = cy - 8 + i * 8;
+        g.drawLine(cx - 11, y, cx + 11, y, c);
+        g.fillCircle(cx + kn[i] * 2, y, 3, c);
+    }
+}
+
 template <class G> void badge(G &g, int cx, int cy, int n)
 {
-    char s[8];
+    char s[12];
     if (n > 99)
         snprintf(s, sizeof(s), "99+");
     else
@@ -517,12 +526,12 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
     divider(g, 8, w - 8, sy + 21, K);
 
     // --- hexagon tiles
-    static const char *labels[T_COUNT] = {"CHAT", "POSTA", "NODI", "MAPPA", "AMICI", "OPZIONI", "BLOCCA"};
+    static const char *labels[T_COUNT] = {"CHAT", "POSTA", "NODI", "MAPPA", "AMICI", "CONTROLLI", "OPZIONI", "BLOCCA"};
     for (int i = 0; i < T_COUNT; i++) {
         const int cx = L.hexCx[i], cy = L.hexCy[i];
         hex(g, cx, cy, L.hexR - 2, K);
         hex(g, cx, cy, L.hexR - 3, K);
-        const int iy = cy - 7;
+        const int iy = cy - 9;
         switch (i) {
         case T_MESSAGES:
             iconMessage(g, cx, iy, K);
@@ -539,6 +548,9 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
         case T_FAVORITES:
             iconHeart(g, cx, iy, K);
             break;
+        case T_CONTROLS:
+            iconSliders(g, cx, iy + 1, K);
+            break;
         case T_OPTIONS:
             iconGear(g, cx, iy, K);
             break;
@@ -546,24 +558,10 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
             iconPadlock(g, cx, iy + 2, 11, true, K);
             break;
         }
-        g.txt(cx, cy + 17, labels[i], SMALL, CENTER, MIDDLE, K);
+        g.txt(cx, cy + 15, labels[i], SMALL, CENTER, MIDDLE, K);
     }
     if (in.unread > 0)
         badge(g, L.hexCx[T_MESSAGES] + L.hexR / 2 + 4, L.hexCy[T_MESSAGES] - L.hexR / 2 - 3, in.unread);
-
-    // --- what the three touch keys under the screen do
-    for (int x = 8; x < w - 8; x += 3)
-        g.drawPixel(x, L.hintLineY, K);
-    const int cols[3] = {w / 6, w / 2, w * 5 / 6};
-    iconHeart(g, cols[0], L.hintY, K);
-    g.txt(cols[0], L.hintY + 19, "AMICI", SMALL, CENTER, MIDDLE, K);
-    iconMessage(g, cols[1], L.hintY, K);
-    g.txt(cols[1], L.hintY + 19, "CHAT", SMALL, CENTER, MIDDLE, K);
-    iconArrow(g, cols[2], L.hintY, K);
-    g.txt(cols[2], L.hintY + 19, "AVANTI", SMALL, CENTER, MIDDLE, K);
-
-    if (in.diag && in.diag[0])
-        g.txt(w / 2, h - 7, in.diag, SMALL, CENTER, MIDDLE, K);
 
     brackets(g, 2, 2, w - 4, h - 4, 10, K);
 }
@@ -641,6 +639,154 @@ template <class G> void renderLock(G &g, int w, int h, const Info &in)
     miniHeart(g, 18, h - 24, K);
     g.txt(30, h - 24, "TIENI PREMUTO PER SBLOCCARE", SMALL, LEFT, MIDDLE, K);
     g.txt(30, h - 11, "oppure tocco lungo sullo schermo", SMALL, LEFT, MIDDLE, K);
+}
+
+
+// ------------------------------------------------------------------------------------------------
+// Controls screen: square tiles with quick switches
+// ------------------------------------------------------------------------------------------------
+
+enum Control : uint8_t { C_SCREEN_LIGHT, C_KEY_LIGHT, C_VIBRATION, C_GPS, C_BLUETOOTH, C_WIFI, C_LOCK, C_HOME, C_COUNT };
+
+struct Controls {
+    bool screenLight = false;
+    bool keyLight = false;
+    bool vibration = false;
+    bool gps = false;
+    bool bluetooth = false;
+    bool wifi = false;
+    int8_t confirm = -1; // control waiting for a second tap (restarts the device)
+};
+
+struct ControlRect {
+    int x, y, w, h;
+};
+
+inline ControlRect controlRect(int w, int i)
+{
+    const int gap = 8, tw = (w - 3 * gap) / 2, th = 52, top = 50;
+    ControlRect r;
+    r.w = tw;
+    r.h = th;
+    r.x = gap + (i % 2) * (tw + gap);
+    r.y = top + (i / 2) * (th + gap);
+    return r;
+}
+
+inline int controlAt(int w, int x, int y)
+{
+    for (int i = 0; i < C_COUNT; i++) {
+        const ControlRect r = controlRect(w, i);
+        if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)
+            return i;
+    }
+    return -1;
+}
+
+template <class G> void iconSun(G &g, int cx, int cy, uint16_t c)
+{
+    g.fillCircle(cx, cy, 4, c);
+    for (int i = 0; i < 8; i++) {
+        const float a = i * 0.7853982f;
+        g.drawLine(cx + (int)(7 * cosf(a)), cy + (int)(7 * sinf(a)), cx + (int)(10 * cosf(a)), cy + (int)(10 * sinf(a)), c);
+    }
+}
+
+template <class G> void iconKeys(G &g, int cx, int cy, uint16_t c)
+{
+    for (int r = 0; r < 2; r++)
+        for (int k = 0; k < 4; k++)
+            g.drawRect(cx - 11 + k * 6, cy - 6 + r * 7, 5, 6, c);
+    g.drawRect(cx - 8, cy + 8, 16, 4, c);
+}
+
+template <class G> void iconVibration(G &g, int cx, int cy, uint16_t c)
+{
+    g.drawRect(cx - 4, cy - 8, 9, 16, c);
+    g.drawLine(cx - 8, cy - 5, cx - 8, cy + 5, c);
+    g.drawLine(cx + 8, cy - 5, cx + 8, cy + 5, c);
+    g.drawLine(cx - 11, cy - 3, cx - 11, cy + 3, c);
+    g.drawLine(cx + 11, cy - 3, cx + 11, cy + 3, c);
+}
+
+template <class G> void iconWifi(G &g, int cx, int cy, uint16_t c)
+{
+    g.fillCircle(cx, cy + 6, 2, c);
+    g.drawCircleHelper(cx, cy + 6, 6, 3, c);
+    g.drawCircleHelper(cx, cy + 6, 10, 3, c);
+    g.drawCircleHelper(cx, cy + 6, 14, 3, c);
+}
+
+template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
+{
+    g.fillRect(0, 0, w, h, W);
+    brackets(g, 2, 2, w - 4, h - 4, 10, K);
+
+    // title, with a hexagon that brings you home, and the menu button
+    hex(g, 22, 22, 13, K);
+    g.fillRect(19, 19, 7, 7, K);
+    g.txt(42, 22, "CONTROLLI", MEDIUM, LEFT, MIDDLE, K);
+    iconMenu(g, w - 58, 17, 13, K);
+    divider(g, 8, w - 8, 41, K);
+
+    static const char *names[C_COUNT] = {"SCHERMO", "TASTIERA", "VIBRA", "GPS", "BLUETOOTH", "WIFI", "BLOCCA", "HOME"};
+    const bool on[C_COUNT] = {cs.screenLight, cs.keyLight, cs.vibration, cs.gps, cs.bluetooth, cs.wifi, false, false};
+
+    for (int i = 0; i < C_COUNT; i++) {
+        const ControlRect r = controlRect(w, i);
+        const bool toggle = i < C_LOCK;
+        const bool filled = toggle && on[i];
+        const uint16_t fg = filled ? W : K;
+        if (filled) {
+            g.fillRoundRect(r.x, r.y, r.w, r.h, 6, K);
+        } else {
+            g.drawRect(r.x, r.y, r.w, r.h, K);
+            g.drawRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2, K);
+        }
+        const int ix = r.x + 17, iy = r.y + r.h / 2 - 2;
+        switch (i) {
+        case C_SCREEN_LIGHT:
+            iconSun(g, ix, iy, fg);
+            break;
+        case C_KEY_LIGHT:
+            iconKeys(g, ix, iy, fg);
+            break;
+        case C_VIBRATION:
+            iconVibration(g, ix, iy, fg);
+            break;
+        case C_GPS:
+            iconCrosshair(g, ix, iy, 9, fg);
+            break;
+        case C_BLUETOOTH:
+            g.txt(ix, iy, "BT", MEDIUM, CENTER, MIDDLE, fg);
+            break;
+        case C_WIFI:
+            iconWifi(g, ix, iy - 2, fg);
+            break;
+        case C_LOCK:
+            iconPadlock(g, ix, iy + 2, 9, true, fg);
+            break;
+        case C_HOME:
+            hex(g, ix, iy, 11, fg);
+            g.fillRect(ix - 3, iy - 3, 7, 7, fg);
+            break;
+        }
+        const int tx = r.x + 34;
+        if (cs.confirm == i) {
+            g.txt(tx, r.y + 17, "RIAVVIA?", SMALL, LEFT, MIDDLE, fg);
+            g.txt(tx, r.y + 35, "RITOCCA", SMALL, LEFT, MIDDLE, fg);
+        } else if (i <= C_KEY_LIGHT) {
+            g.txt(tx, r.y + 11, "LUCE", SMALL, LEFT, MIDDLE, fg);
+            g.txt(tx, r.y + 26, names[i], SMALL, LEFT, MIDDLE, fg);
+            g.txt(tx, r.y + 41, on[i] ? "ACCESA" : "SPENTA", SMALL, LEFT, MIDDLE, fg);
+        } else {
+            g.txt(tx, r.y + (toggle ? 17 : 26), names[i], SMALL, LEFT, MIDDLE, fg);
+            if (toggle)
+                g.txt(tx, r.y + 35, on[i] ? "ACCESO" : "SPENTO", SMALL, LEFT, MIDDLE, fg);
+        }
+    }
+    g.txt(w / 2, h - 22, "Bluetooth e WiFi riavviano", SMALL, CENTER, MIDDLE, K);
+    g.txt(w / 2, h - 9, "il dispositivo", SMALL, CENTER, MIDDLE, K);
 }
 
 } // namespace MaxUi

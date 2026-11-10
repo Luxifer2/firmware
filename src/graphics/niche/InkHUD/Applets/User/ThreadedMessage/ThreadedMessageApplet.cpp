@@ -20,12 +20,21 @@ void InkHUD::ThreadedMessageApplet::onRender(bool full)
 
     // Header text
     std::string headerText;
+#ifdef T_DECK_MAX
+    headerText += "Chat ";
+    headerText += to_string(channelIndex);
+    headerText += ": ";
+    if (channels.isDefaultChannel(channelIndex))
+        headerText += "Pubblica";
+    else
+#else
     headerText += "Channel ";
     headerText += to_string(channelIndex);
     headerText += ": ";
     if (channels.isDefaultChannel(channelIndex))
         headerText += "Public";
     else
+#endif
         headerText += channels.getByIndex(channelIndex).settings.name;
 
     // Draw a "standard" applet header

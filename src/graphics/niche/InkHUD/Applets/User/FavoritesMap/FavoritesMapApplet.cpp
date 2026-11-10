@@ -25,8 +25,13 @@ void InkHUD::FavoritesMapApplet::onRender(bool full)
 {
     // Custom empty state text for favorites-only map.
     if (!enoughMarkers()) {
+#ifdef T_DECK_MAX
+        printAt(X(0.5), Y(0.5) - (getFont().lineHeight() / 2), "Qui vedrai la posizione", CENTER, MIDDLE);
+        printAt(X(0.5), Y(0.5) + (getFont().lineHeight() / 2), "dei nodi preferiti", CENTER, MIDDLE);
+#else
         printAt(X(0.5), Y(0.5) - (getFont().lineHeight() / 2), "Favorite node position", CENTER, MIDDLE);
         printAt(X(0.5), Y(0.5) + (getFont().lineHeight() / 2), "will appear here", CENTER, MIDDLE);
+#endif
         return;
     }
 

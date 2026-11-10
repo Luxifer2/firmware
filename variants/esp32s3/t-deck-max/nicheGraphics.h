@@ -9,6 +9,7 @@
 #include "graphics/niche/Inputs/TwoButton.h"
 // Applets
 #include "graphics/niche/InkHUD/Applets/Bases/Map/SDMapTiles.h"
+#include "graphics/niche/InkHUD/Applets/Max/ControlsApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/HomeApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/AllMessage/AllMessageApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/DM/DMApplet.h"
@@ -65,6 +66,7 @@ void setupNicheGraphics()
 
     // Home screen: keep this last, its position in the list is fixed in MaxUi::A_HOME
     inkhud->addApplet("Home", new InkHUD::HomeApplet, true, false);
+    inkhud->addApplet("Controls", new InkHUD::ControlsApplet, true, false);
 
     inkhud->begin();
     settings.optionalMenuItems.backlight = false;
