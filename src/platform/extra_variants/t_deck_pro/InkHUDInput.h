@@ -28,6 +28,50 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
         wakeObserver.observe(&notifyLightSleepEnd);
     }
 
+#ifdef T_DECK_MAX
+    // The three touch keys under the screen of the T-Deck Max, counted left to right:
+    // 0 = heart, 1 = speech bubble, 2 = arrow.
+    //   heart / arrow: previous / next screen, or previous / next item while a menu is open
+    //   bubble:        open the menu, or choose the highlighted item
+    void touchKey(uint8_t id)
+    {
+        auto *hud = NicheGraphics::InkHUD::InkHUD::getInstance();
+        powerFSM.trigger(EVENT_INPUT);
+        bool typing = false;
+        bool systemHandlingInput = false;
+        for (auto *applet : hud->systemApplets) {
+            typing |= applet->handleFreeText;
+            systemHandlingInput |= applet->handleInput;
+        }
+        switch (id) {
+        case 0:
+            if (typing)
+                hud->freeTextCancel();
+            else if (systemHandlingInput)
+                hud->touchNavUp();
+            else
+                hud->prevApplet();
+            break;
+        case 1:
+            if (typing)
+                hud->freeTextDone();
+            else
+                hud->longpress();
+            break;
+        case 2:
+            if (typing)
+                break;
+            if (systemHandlingInput)
+                hud->touchNavDown();
+            else
+                hud->nextApplet();
+            break;
+        default:
+            break;
+        }
+    }
+#endif
+
   protected:
     int onNotify(const InputEvent *event) override
     {
@@ -148,7 +192,9 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
     int beforeSleep(void *)
     {
         tDeckProUpdateBacklights(true);
+#ifdef PIN_VIBRATION
         digitalWrite(PIN_VIBRATION, LOW);
+#endif
         return 0;
     }
 

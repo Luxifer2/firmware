@@ -2021,6 +2021,21 @@ bool Power::cw2015Init()
 #define BQ27220_INIT_ATTEMPTS 3
 #define BQ27220_RETRY_INTERVAL_MS (60 * 1000)
 
+#ifdef T_DECK_MAX
+// T-Deck Max charger (SY6970, address 0x6A): status register 0x0B, bits 7-5 VBUS state, bits 4-3 charge state.
+static bool readSY6970Status(uint8_t &status)
+{
+    Wire.beginTransmission(0x6A);
+    Wire.write(0x0B);
+    if (Wire.endTransmission(false) != 0)
+        return false;
+    if (Wire.requestFrom(uint8_t(0x6A), size_t(1)) != 1)
+        return false;
+    status = Wire.read();
+    return true;
+}
+#endif
+
 /**
  * Adapter class for BQ25896/BQ27220 Lipo battery charger.
  *
@@ -2049,6 +2064,11 @@ class LipoCharger : public HasBatteryLevel
      */
     bool runOnce()
     {
+#ifdef T_DECK_MAX
+        // T-Deck Max: the SY6970 charger works on its own; only the BQ27220 fuel gauge is brought up here.
+        gaugeRunOnce();
+        return true;
+#endif
         if (PPM == nullptr) {
             PPM = new XPowersPPM;
             bool result = PPM->init(Wire, I2C_SDA, I2C_SCL, BQ25896_ADDR);
@@ -2143,7 +2163,11 @@ class LipoCharger : public HasBatteryLevel
     /**
      * The raw voltage of the battery in millivolts, or NAN if unknown
      */
+#ifdef T_DECK_MAX
+    virtual uint16_t getBattVoltage() override { return bq ? bq->getVoltage() : 0; }
+#else
     virtual uint16_t getBattVoltage() override { return bq ? bq->getVoltage() : PPM->getBattVoltage(); }
+#endif
 
     /**
      * return true if there is a battery installed in this unit
@@ -2153,11 +2177,29 @@ class LipoCharger : public HasBatteryLevel
     /**
      * return true if there is an external power source detected
      */
+#ifdef T_DECK_MAX
+    virtual bool isVbusIn() override
+    {
+        uint8_t status = 0;
+        return readSY6970Status(status) && ((status >> 5) & 0x07) != 0;
+    }
+#else
     virtual bool isVbusIn() override { return PPM->isVbusIn(); }
+#endif
 
     /**
      * return true if the battery is currently charging
      */
+#ifdef T_DECK_MAX
+    virtual bool isCharging() override
+    {
+        uint8_t status = 0;
+        if (!readSY6970Status(status))
+            return false;
+        const uint8_t chargeState = (status >> 3) & 0x03; // 1 = pre-charge, 2 = fast charge
+        return chargeState == 1 || chargeState == 2;
+    }
+#else
     virtual bool isCharging() override
     {
         bool isCharging = PPM->isCharging();
@@ -2172,6 +2214,7 @@ class LipoCharger : public HasBatteryLevel
         }
         return isCharging;
     }
+#endif
 };
 
 LipoCharger lipoCharger;

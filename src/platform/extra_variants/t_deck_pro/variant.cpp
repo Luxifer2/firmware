@@ -26,6 +26,21 @@ static CSE_CST328 &touchPanel()
     return panel;
 }
 
+#ifdef T_DECK_MAX
+// Handler for the three touch keys under the screen of the T-Deck Max (defined further down).
+#if defined(MESHTASTIC_INCLUDE_INKHUD)
+static TDeckProInkHUDInput *tDeckMaxKeyInput = nullptr;
+void tDeckMaxTouchKey(uint8_t id, bool pressed)
+{
+    LOG_DEBUG("Touch key %u %s", id, pressed ? "down" : "up");
+    if (pressed && tDeckMaxKeyInput)
+        tDeckMaxKeyInput->touchKey(id);
+}
+#else
+void tDeckMaxTouchKey(uint8_t, bool) {}
+#endif
+#endif
+
 static bool is_cst3530 = false;
 volatile bool touch_isr = false;
 #define CST3530_ADDR 0x1A
@@ -66,6 +81,15 @@ bool read_cst3530_touch(int16_t *x, int16_t *y, bool &readSucceeded)
     if (report_typ != 0xFF) {
         return false;
     }
+
+#ifdef T_DECK_MAX
+    // The three icons under the screen are touch keys of the same controller: a key report has
+    // no finger (low nibble of buffer[3]) and one key (high nibble); buffer[8] holds id and state.
+    if ((buffer[3] & 0x0F) == 0 && (buffer[3] >> 4) != 0) {
+        tDeckMaxTouchKey(buffer[8] & 0x0F, (buffer[8] >> 4) != 0);
+        return false;
+    }
+#endif
 
     uint8_t touch_points = buffer[3] & 0x0F;
     if (touch_points == 0 || touch_points > 1) {
@@ -136,7 +160,9 @@ void attachTDeckProTouchInterrupt()
 void lateInitVariant()
 {
     if (isV11()) {
+#ifndef T_DECK_MAX
         // GPIO38 powers the V1.0 sensor rail, so only pulse it on V1.1.
+        // (On the T-Deck Max the touch reset is on the IO expander and is pulsed in earlyInitVariant.)
         pinMode(38, OUTPUT);
         digitalWrite(38, HIGH);
         delay(20);
@@ -144,6 +170,7 @@ void lateInitVariant()
         delay(80);
         digitalWrite(38, HIGH);
         delay(20);
+#endif
 
         int retry = 5;
         uint8_t buffer[7] = {};
@@ -185,6 +212,9 @@ void lateInitVariant()
 #ifdef MESHTASTIC_INCLUDE_INKHUD
     static TDeckProInkHUDInput input;
     input.begin();
+#ifdef T_DECK_MAX
+    tDeckMaxKeyInput = &input;
+#endif
 #endif
 }
 #endif
