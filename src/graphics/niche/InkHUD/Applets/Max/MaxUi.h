@@ -1376,9 +1376,6 @@ template <class G> void renderBadge(G &g, int w, int h, const Info &in, const Ba
         snprintf(s, sizeof(s), "%s %s", d, in.baseDist > 15 ? compassName(in.baseBearing) : "");
         g.txt(w / 2 + 24, 253, in.baseDist > 15 ? s : "ALLA BASE", SMALL, LEFT, MIDDLE, K);
     }
-
-    divider(g, 10, w - 10, h - 34, K);
-    g.txt(w / 2, h - 18, "MESHTASTIC  //  T-DECK MAX", SMALL, CENTER, MIDDLE, K);
 }
 
 } // namespace MaxUi
