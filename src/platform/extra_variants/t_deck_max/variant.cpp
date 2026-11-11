@@ -212,12 +212,8 @@ const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn)
         case ESP_RST_EXT:
             text = "TASTO RESET";
             break;
-        case ESP_RST_USB:
-            text = "DA USB";
-            break;
         default:
             text = "ALTRO";
-            bootCrashes++;
             break;
         }
         crashes = bootCrashes;
