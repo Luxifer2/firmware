@@ -37,6 +37,8 @@ class RadarApplet : public Applet, public concurrency::OSThread
     int32_t trackLat[TRACK_MAX] = {}, trackLon[TRACK_MAX] = {};
     int trackCount = 0, trackHead = 0; // ring buffer
     NodeNum selectedNode = 0;
+    bool baseConfirm = false;
+    uint32_t baseConfirmSince = 0;
     uint32_t lastRenderMs = 0;
     int32_t renderedLat = 0, renderedLon = 0;
     size_t renderedNodes = 0;

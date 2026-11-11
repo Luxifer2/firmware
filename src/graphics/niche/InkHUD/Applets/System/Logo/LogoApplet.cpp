@@ -4,6 +4,11 @@
 
 #include "mesh/NodeDB.h"
 
+#ifdef T_DECK_MAX
+#include "../../Max/MaxInfo.h"
+#include "../../Max/MaxUi.h"
+#endif
+
 using namespace NicheGraphics;
 
 InkHUD::LogoApplet::LogoApplet() : concurrency::OSThread("LogoApplet")
@@ -30,8 +35,40 @@ InkHUD::LogoApplet::LogoApplet() : concurrency::OSThread("LogoApplet")
     // This is then drawn with a FULL refresh by Renderer::begin
 }
 
+#ifdef T_DECK_MAX
+void InkHUD::LogoApplet::txt(int x, int y, const char *text, int font, int align, int valign, uint16_t color)
+{
+    setFont(font == MaxUi::SMALL ? fontSmall : (font == MaxUi::MEDIUM ? fontMedium : fontLarge));
+    setTextColor(color);
+    HorizontalAlignment ha = LEFT;
+    if (align == MaxUi::CENTER)
+        ha = CENTER;
+    else if (align == MaxUi::RIGHT)
+        ha = RIGHT;
+    printAt(x, y, text, ha, valign == MaxUi::MIDDLE ? MIDDLE : TOP);
+    setTextColor(BLACK);
+}
+#endif
+
 void InkHUD::LogoApplet::onRender(bool full)
 {
+#ifdef T_DECK_MAX
+    if (badge) {
+        MaxUi::Info info;
+        gatherMaxInfo(info);
+        MaxUi::Badge b;
+        meshtastic_NodeInfoLite *ourNode = nodeDB->getMeshNode(nodeDB->getNodeNum());
+        if (ourNode && nodeInfoLiteHasUser(ourNode)) {
+            b.longName = ourNode->long_name;
+            b.shortName = ourNode->short_name;
+        }
+        b.nodeNum = nodeDB->getNodeNum();
+        b.hasPos = maxOwnPosition(b.lat, b.lon);
+        MaxUi::renderBadge(*this, width(), height(), info, b);
+        return;
+    }
+#endif
+
     // Size  of the region which the logo should "scale to fit"
     uint16_t logoWLimit = X(0.8);
     uint16_t logoHLimit = Y(0.5);
@@ -151,6 +188,9 @@ void InkHUD::LogoApplet::onShutdown()
     textRight = "";
     textTitle = parseShortName(ourNode);
     fontTitle = fontMedium;
+#ifdef T_DECK_MAX
+    badge = true; // the powered-off screen is the badge
+#endif
 
     // This is then drawn by InkHUD::Events::onShutdown, with a blocking FULL update, after InkHUD's flash write is complete
 }

@@ -43,7 +43,108 @@ struct Info {
     uint16_t nodes = 0;  // nodes heard recently
     uint16_t unread = 0; // messages not yet read
     const char *diag = nullptr;
+    // way back to the base (see "SEGNA BASE" on the radar)
+    bool hasBase = false;     // a base is set and we know where we are
+    float baseDist = 0;       // meters
+    int baseBearing = 0;      // degrees from north
+    int headingDeg = -1;      // our direction of travel, -1 when standing still
+    // next sunrise / sunset
+    bool sunValid = false;
+    bool sunIsSunset = false; // the next event is the sunset
+    uint16_t sunMinutes = 0;  // minutes until it
 };
+
+// Sunrise and sunset of day n (days since 2000-01-01 12:00 UTC), as unix seconds. False: polar day / night.
+inline bool sunRiseSet(int32_t n, double lat, double lon, double &rise, double &set)
+{
+    const double D = 0.017453292519943295;
+    const double js = n - lon / 360.0;
+    const double m = fmod(357.5291 + 0.98560028 * js, 360.0);
+    const double c = 1.9148 * sin(m * D) + 0.02 * sin(2 * m * D) + 0.0003 * sin(3 * m * D);
+    const double l = fmod(m + c + 180.0 + 102.9372, 360.0);
+    const double jt = 2451545.0 + js + 0.0053 * sin(m * D) - 0.0069 * sin(2 * l * D);
+    const double sd = sin(l * D) * sin(23.4397 * D);
+    const double cd = cos(asin(sd));
+    const double cw = (sin(-0.833 * D) - sin(lat * D) * sd) / (cos(lat * D) * cd);
+    if (cw < -1 || cw > 1)
+        return false;
+    const double w0 = acos(cw) / D;
+    rise = (jt - w0 / 360.0 - 2440587.5) * 86400.0;
+    set = (jt + w0 / 360.0 - 2440587.5) * 86400.0;
+    return true;
+}
+
+// The next sunrise or sunset after now (unix seconds, UTC)
+inline bool nextSunEvent(uint32_t now, double lat, double lon, uint32_t &when, bool &isSunset)
+{
+    const double jd = now / 86400.0 + 2440587.5;
+    const int32_t n0 = (int32_t)floor(jd - 2451545.0 + 0.0008);
+    double best = 1e30;
+    bool found = false;
+    for (int k = -1; k <= 2; k++) {
+        double r, st;
+        if (!sunRiseSet(n0 + k, lat, lon, r, st))
+            continue;
+        if (r > now && r < best) {
+            best = r;
+            isSunset = false;
+            found = true;
+        }
+        if (st > now && st < best) {
+            best = st;
+            isSunset = true;
+            found = true;
+        }
+    }
+    if (found)
+        when = (uint32_t)best;
+    return found;
+}
+
+// Meters east/north of point b seen from point a (degrees * 1e7). Good enough below ~100 km.
+inline void localOffset(int32_t latA, int32_t lonA, int32_t latB, int32_t lonB, float &e, float &n)
+{
+    const double lat0 = latA * 1e-7 * 0.017453293;
+    n = (float)((latB - latA) * 1e-7 * 111132.0);
+    e = (float)((lonB - lonA) * 1e-7 * 111320.0 * cos(lat0));
+}
+
+inline int bearingDeg(float e, float n)
+{
+    int b = (int)lroundf(atan2f(e, n) * 57.29578f);
+    return (b + 360) % 360;
+}
+
+inline const char *compassName(int deg)
+{
+    static const char *names[8] = {"N", "NE", "E", "SE", "S", "SO", "O", "NO"};
+    return names[((deg + 22) % 360) / 45];
+}
+
+inline void formatDistance(float m, char *out, size_t len)
+{
+    if (m < 1000)
+        snprintf(out, len, "%d m", (int)lroundf(m));
+    else if (m < 10000)
+        snprintf(out, len, "%d,%d km", (int)(m / 1000), ((int)(m / 100)) % 10);
+    else
+        snprintf(out, len, "%d km", (int)lroundf(m / 1000));
+}
+
+// Where to turn, seen from the direction of travel: -180..180, positive = right
+inline int relativeTurn(int bearing, int heading)
+{
+    return ((bearing - heading + 540) % 360) - 180;
+}
+
+inline const char *turnName(int rel)
+{
+    if (rel >= -20 && rel <= 20)
+        return "dritto";
+    if (rel >= 160 || rel <= -160)
+        return "dietro";
+    return rel > 0 ? "a destra" : "a sinistra";
+}
 
 // Date from days since 1970-01-01 (civil calendar)
 inline void civilFromDays(int32_t z, uint16_t &y, uint8_t &m, uint8_t &d)
@@ -475,6 +576,61 @@ template <class G> void iconSliders(G &g, int cx, int cy, uint16_t c)
     }
 }
 
+// Arrow pointing at deg (0 = up), centered on cx, cy
+template <class G> void arrowAt(G &g, int cx, int cy, int deg, int len, uint16_t c)
+{
+    const float a = deg * 0.017453293f;
+    const float sx = sinf(a), cy0 = -cosf(a);
+    const int hx = cx + (int)lroundf(sx * len / 2), hy = cy + (int)lroundf(cy0 * len / 2);
+    const int tx = cx - (int)lroundf(sx * len / 2), ty = cy - (int)lroundf(cy0 * len / 2);
+    g.drawLine(tx, ty, hx, hy, c);
+    g.drawLine(tx + 1, ty, hx + 1, hy, c);
+    const float l = len * 0.45f;
+    const int lx = hx - (int)lroundf(l * sinf(a - 0.5f)), ly = hy + (int)lroundf(l * cosf(a - 0.5f));
+    const int rx = hx - (int)lroundf(l * sinf(a + 0.5f)), ry = hy + (int)lroundf(l * cosf(a + 0.5f));
+    g.fillTriangle(hx, hy, lx, ly, rx, ry, c);
+}
+
+// Small flag: the base
+template <class G> void iconFlag(G &g, int cx, int cy, uint16_t c)
+{
+    g.drawLine(cx - 4, cy - 7, cx - 4, cy + 7, c);
+    g.drawLine(cx - 3, cy - 7, cx - 3, cy + 7, c);
+    g.fillTriangle(cx - 2, cy - 7, cx + 6, cy - 3, cx - 2, cy + 1, c);
+}
+
+// Small sun on the horizon
+template <class G> void iconSunset(G &g, int cx, int cy, uint16_t c)
+{
+    g.drawCircleHelper(cx, cy + 3, 5, 3, c);
+    g.drawLine(cx - 8, cy + 3, cx + 8, cy + 3, c);
+    g.drawLine(cx, cy - 6, cx, cy - 4, c);
+    g.drawLine(cx - 6, cy - 2, cx - 5, cy - 1, c);
+    g.drawLine(cx + 6, cy - 2, cx + 5, cy - 1, c);
+}
+
+// One line: way to the base (left) and next sunrise / sunset (right)
+template <class G> void baseSunLine(G &g, int w, int y, const Info &in)
+{
+    char s[32], d[16];
+    if (in.hasBase) {
+        iconFlag(g, 16, y, K);
+        formatDistance(in.baseDist, d, sizeof(d));
+        if (in.headingDeg >= 0 && in.baseDist > 15) {
+            arrowAt(g, 30, y, relativeTurn(in.baseBearing, in.headingDeg), 12, K);
+            g.txt(40, y, d, SMALL, LEFT, MIDDLE, K);
+        } else {
+            snprintf(s, sizeof(s), "%s %s", d, in.baseDist > 15 ? compassName(in.baseBearing) : "");
+            g.txt(26, y, in.baseDist > 15 ? s : "SEI ALLA BASE", SMALL, LEFT, MIDDLE, K);
+        }
+    }
+    if (in.sunValid) {
+        snprintf(s, sizeof(s), "%s %uh%02u", in.sunIsSunset ? "TRAMONTO" : "ALBA", in.sunMinutes / 60, in.sunMinutes % 60);
+        g.txt(w - 12, y, s, SMALL, RIGHT, MIDDLE, K);
+        iconSunset(g, w - 12 - (int)strlen(s) * 6 - 12, y, K);
+    }
+}
+
 // Radar icon for the home tile
 template <class G> void iconRadar(G &g, int cx, int cy, uint16_t c)
 {
@@ -576,6 +732,8 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
         badge(g, L.hexCx[T_MESSAGES] + L.hexR / 2 + 4, L.hexCy[T_MESSAGES] - L.hexR / 2 - 3, in.unread);
 
     brackets(g, 2, 2, w - 4, h - 4, 10, K);
+
+    baseSunLine(g, w, h - 14, in);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -637,7 +795,7 @@ template <class G> void renderLock(G &g, int w, int h, const Info &in)
     g.txt(w / 2 + 34, y + 10, s, MEDIUM, LEFT, MIDDLE, K);
 
     // messages
-    y = 262;
+    y = 256;
     iconEnvelope(g, 28, y + 10, K);
     if (in.unread == 0)
         snprintf(s, sizeof(s), "NESSUN MESSAGGIO NUOVO");
@@ -645,12 +803,12 @@ template <class G> void renderLock(G &g, int w, int h, const Info &in)
         snprintf(s, sizeof(s), "%u MESSAGGI NUOVI", in.unread);
     g.txt(52, y + 10, s, MEDIUM, LEFT, MIDDLE, K);
 
-    // unlock hint
+    // base and sun, then the unlock hint
+    baseSunLine(g, w, h - 30, in);
     for (int x = 8; x < w - 8; x += 3)
-        g.drawPixel(x, h - 36, K);
-    miniHeart(g, 18, h - 24, K);
-    g.txt(30, h - 24, "TIENI PREMUTO PER SBLOCCARE", SMALL, LEFT, MIDDLE, K);
-    g.txt(30, h - 11, "oppure tocco lungo sullo schermo", SMALL, LEFT, MIDDLE, K);
+        g.drawPixel(x, h - 20, K);
+    miniHeart(g, 18, h - 10, K);
+    g.txt(30, h - 10, "CUORE A LUNGO PER SBLOCCARE", SMALL, LEFT, MIDDLE, K);
 }
 
 
@@ -841,11 +999,14 @@ struct Radar {
     float selDist = 0;
     int selBearing = 0;
     int nodesWithoutPos = 0;
+    bool hasBase = false;
+    float baseE = 0, baseN = 0;
+    bool baseConfirm = false; // "move the base here?" waiting for a second tap
 
     // Back to the defaults without a big temporary (the struct is kept static, off the stack)
     void clear()
     {
-        hasPos = gpsLock = hasAlt = false;
+        hasPos = gpsLock = hasAlt = hasBase = baseConfirm = false;
         sats = altM = nBlips = nTrack = nodesWithoutPos = 0;
         speedKmh = headingDeg = selected = -1;
         selName[0] = 0;
@@ -854,36 +1015,6 @@ struct Radar {
     }
 };
 
-// Meters east/north of point b seen from point a (degrees * 1e7). Good enough below ~100 km.
-inline void localOffset(int32_t latA, int32_t lonA, int32_t latB, int32_t lonB, float &e, float &n)
-{
-    const double lat0 = latA * 1e-7 * 0.017453293;
-    n = (float)((latB - latA) * 1e-7 * 111132.0);
-    e = (float)((lonB - lonA) * 1e-7 * 111320.0 * cos(lat0));
-}
-
-inline int bearingDeg(float e, float n)
-{
-    int b = (int)lroundf(atan2f(e, n) * 57.29578f);
-    return (b + 360) % 360;
-}
-
-inline const char *compassName(int deg)
-{
-    static const char *names[8] = {"N", "NE", "E", "SE", "S", "SO", "O", "NO"};
-    return names[((deg + 22) % 360) / 45];
-}
-
-inline void formatDistance(float m, char *out, size_t len)
-{
-    if (m < 1000)
-        snprintf(out, len, "%d m", (int)lroundf(m));
-    else if (m < 10000)
-        snprintf(out, len, "%d,%d km", (int)(m / 1000), ((int)(m / 100)) % 10);
-    else
-        snprintf(out, len, "%d km", (int)lroundf(m / 1000));
-}
-
 inline float radarRange(const Radar &r)
 {
     float far = 0;
@@ -891,6 +1022,8 @@ inline float radarRange(const Radar &r)
         far = std::max(far, sqrtf(r.blips[i].e * r.blips[i].e + r.blips[i].n * r.blips[i].n));
     for (int i = 0; i < r.nTrack; i++)
         far = std::max(far, sqrtf(r.trackE[i] * r.trackE[i] + r.trackN[i] * r.trackN[i]));
+    if (r.hasBase)
+        far = std::max(far, sqrtf(r.baseE * r.baseE + r.baseN * r.baseN));
     static const float steps[] = {100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
     for (float st : steps)
         if (far <= st)
@@ -921,6 +1054,12 @@ inline RadarGeom radarGeom(int w)
     return g;
 }
 
+// "SEGNA BASE" button in the title bar
+inline bool radarBaseButtonAt(int w, int x, int y)
+{
+    return x >= w - 88 && x <= w - 6 && y >= 4 && y <= 40;
+}
+
 inline bool radarAt(int w, int x, int y)
 {
     const RadarGeom G = radarGeom(w);
@@ -945,7 +1084,18 @@ template <class G> void renderRadar(G &g, int w, int h, const Radar &rd)
     hex(g, 22, 22, 13, K);
     g.fillRect(19, 19, 7, 7, K);
     g.txt(42, 22, "RADAR", MEDIUM, LEFT, MIDDLE, K);
-    iconMenu(g, w - 58, 17, 13, K);
+    // base button
+    if (rd.baseConfirm) {
+        g.fillRoundRect(w - 84, 6, 74, 32, 4, K);
+        g.txt(w - 47, 16, "SPOSTO", SMALL, CENTER, MIDDLE, W);
+        g.txt(w - 47, 29, "QUI?", SMALL, CENTER, MIDDLE, W);
+    } else {
+        g.drawRect(w - 84, 6, 74, 32, K);
+        g.drawRect(w - 83, 7, 72, 30, K);
+        iconFlag(g, w - 72, 22, K);
+        g.txt(w - 62, 16, rd.hasBase ? "SPOSTA" : "SEGNA", SMALL, LEFT, MIDDLE, K);
+        g.txt(w - 62, 29, "BASE", SMALL, LEFT, MIDDLE, K);
+    }
     divider(g, 8, w - 8, 41, K);
 
     const RadarGeom R = radarGeom(w);
@@ -1025,6 +1175,19 @@ template <class G> void renderRadar(G &g, int w, int h, const Radar &rd)
             }
         }
 
+        // the base
+        if (rd.hasBase) {
+            int x, y;
+            place(rd.baseE, rd.baseN, x, y);
+            const float px2 = x - R.cx, py2 = y - R.cy, pd = sqrtf(px2 * px2 + py2 * py2);
+            if (pd > R.r - 8 && pd > 0) {
+                x = R.cx + (int)lroundf(px2 * (R.r - 8) / pd);
+                y = R.cy + (int)lroundf(py2 * (R.r - 8) / pd);
+            }
+            g.fillRect(x - 8, y - 8, 16, 17, W);
+            iconFlag(g, x + 1, y, K);
+        }
+
         // us: a small hexagon, with an arrow when moving
         hexFilled(g, R.cx, R.cy, 5, K);
         if (rd.headingDeg >= 0) {
@@ -1049,7 +1212,11 @@ template <class G> void renderRadar(G &g, int w, int h, const Radar &rd)
         formatDistance(rd.selDist, d, sizeof(d));
         snprintf(line, sizeof(line), "%s verso %s", d, compassName(rd.selBearing));
         g.txt(12, y0 + 24, line, SMALL, LEFT, MIDDLE, K);
-        if (rd.nBlips > 1)
+        if (rd.headingDeg >= 0) {
+            const int rel = relativeTurn(rd.selBearing, rd.headingDeg);
+            arrowAt(g, w - 22, y0 + 14, rel, 20, K);
+            g.txt(w - 36, y0 + 24, turnName(rel), SMALL, RIGHT, MIDDLE, K);
+        } else if (rd.nBlips > 1)
             g.txt(w - 12, y0 + 24, "tocca: altro", SMALL, RIGHT, MIDDLE, K);
     } else {
         g.txt(w / 2, y0 + 6, "Nessun nodo con posizione", SMALL, CENTER, MIDDLE, K);
@@ -1147,6 +1314,71 @@ template <class G> void renderBoot(G &g, int w, int h, const Boot &b)
         }
     }
     g.txt(w / 2, h - 12, b.version, SMALL, CENTER, MIDDLE, K);
+}
+
+
+// ------------------------------------------------------------------------------------------------
+// Badge: drawn when switched off from the menu; e-ink keeps it with no power
+// ------------------------------------------------------------------------------------------------
+
+struct Badge {
+    const char *longName = "";
+    const char *shortName = "";
+    uint32_t nodeNum = 0;
+    bool hasPos = false;
+    int32_t lat = 0, lon = 0;
+};
+
+template <class G> void renderBadge(G &g, int w, int h, const Info &in, const Badge &b)
+{
+    g.fillRect(0, 0, w, h, W);
+    brackets(g, 2, 2, w - 4, h - 4, 14, K);
+
+    // identity: short name in a big hexagon, long name and node id below
+    hexFilled(g, w / 2, 58, 42, K);
+    hex(g, w / 2, 58, 34, W);
+    hex(g, w / 2, 58, 33, W);
+    g.txt(w / 2, 58, b.shortName, MEDIUM, CENTER, MIDDLE, W);
+    g.txt(w / 2, 118, b.longName, MEDIUM, CENTER, MIDDLE, K);
+    char s[40];
+    snprintf(s, sizeof(s), "!%08lx", (unsigned long)b.nodeNum);
+    g.txt(w / 2, 136, s, SMALL, CENTER, MIDDLE, K);
+    divider(g, 10, w - 10, 152, K);
+
+    // when it was switched off
+    g.txt(16, 168, "SPENTO", SMALL, LEFT, MIDDLE, K);
+    if (in.timeValid)
+        snprintf(s, sizeof(s), "%.3s %u %s  %02u:%02u", weekdayName(in.wday), in.mday, monthShort(in.mon), in.hh, in.mm);
+    else
+        snprintf(s, sizeof(s), "ora non nota");
+    g.txt(w - 16, 168, s, SMALL, RIGHT, MIDDLE, K);
+
+    // last known position
+    g.txt(16, 190, "ULTIMA POSIZIONE", SMALL, LEFT, MIDDLE, K);
+    if (b.hasPos) {
+        const double lat = b.lat / 1e7, lon = b.lon / 1e7;
+        snprintf(s, sizeof(s), "%.5f %c", fabs(lat), lat >= 0 ? 'N' : 'S');
+        g.txt(16, 208, s, MEDIUM, LEFT, MIDDLE, K);
+        snprintf(s, sizeof(s), "%.5f %c", fabs(lon), lon >= 0 ? 'E' : 'W');
+        g.txt(16, 226, s, MEDIUM, LEFT, MIDDLE, K);
+    } else {
+        g.txt(16, 208, "non nota", MEDIUM, LEFT, MIDDLE, K);
+    }
+
+    // battery and base
+    battery(g, 16, 246, 28, 14, in.hasBatt ? in.batt : 0, false, K);
+    snprintf(s, sizeof(s), in.hasBatt ? "%u%%" : "USB", in.batt);
+    g.txt(52, 253, s, MEDIUM, LEFT, MIDDLE, K);
+    if (in.hasBase) {
+        char d[16];
+        formatDistance(in.baseDist, d, sizeof(d));
+        iconFlag(g, w / 2 + 14, 253, K);
+        snprintf(s, sizeof(s), "%s %s", d, in.baseDist > 15 ? compassName(in.baseBearing) : "");
+        g.txt(w / 2 + 24, 253, in.baseDist > 15 ? s : "ALLA BASE", SMALL, LEFT, MIDDLE, K);
+    }
+
+    divider(g, 10, w - 10, h - 34, K);
+    g.txt(w / 2, h - 18, "MESHTASTIC  //  T-DECK MAX", SMALL, CENTER, MIDDLE, K);
 }
 
 } // namespace MaxUi

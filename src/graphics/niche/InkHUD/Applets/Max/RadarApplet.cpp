@@ -4,6 +4,7 @@
 
 #include "./RadarApplet.h"
 
+#include "./MaxInfo.h"
 #include "./MaxUi.h"
 #include "GPSStatus.h"
 #include "NodeDB.h"
@@ -17,6 +18,7 @@ using namespace NicheGraphics;
 static constexpr uint32_t RECORD_INTERVAL_MS = 20 * 1000;
 static constexpr float RECORD_MIN_METERS = 15;
 static constexpr uint32_t REDRAW_MIN_MS = 30 * 1000;
+static constexpr uint32_t BASE_CONFIRM_MS = 6000;
 
 InkHUD::RadarApplet::RadarApplet() : concurrency::OSThread("RadarApplet")
 {
@@ -36,22 +38,9 @@ void InkHUD::RadarApplet::txt(int x, int y, const char *text, int font, int alig
     setTextColor(BLACK);
 }
 
-// Our position: from the GPS, otherwise whatever our node knows (the phone can provide it)
 bool InkHUD::RadarApplet::ourPosition(int32_t &lat, int32_t &lon)
 {
-    if (localPosition.latitude_i != 0 || localPosition.longitude_i != 0) {
-        lat = localPosition.latitude_i;
-        lon = localPosition.longitude_i;
-        return true;
-    }
-    meshtastic_NodeInfoLite *self = nodeDB->getMeshNode(nodeDB->getNodeNum());
-    meshtastic_PositionLite pos;
-    if (self && nodeDB->hasValidPosition(self) && nodeDB->copyNodePosition(self->num, pos)) {
-        lat = pos.latitude_i;
-        lon = pos.longitude_i;
-        return true;
-    }
-    return false;
+    return maxOwnPosition(lat, lon);
 }
 
 int32_t InkHUD::RadarApplet::runOnce()
@@ -108,6 +97,17 @@ void InkHUD::RadarApplet::onRender(bool full)
         if (localPosition.ground_speed >= 2) // walking pace or more: the course is meaningful
             rd.headingDeg = (int)(localPosition.ground_track / 100000) % 360;
     }
+
+    if (rd.hasPos) {
+        int32_t bLat, bLon;
+        if (maxBaseGet(bLat, bLon)) {
+            rd.hasBase = true;
+            MaxUi::localOffset(lat, lon, bLat, bLon, rd.baseE, rd.baseN);
+        }
+    }
+    rd.baseConfirm = baseConfirm && Throttle::isWithinTimespanMs(baseConfirmSince, BASE_CONFIRM_MS);
+    if (!rd.baseConfirm)
+        baseConfirm = false;
 
     if (rd.hasPos) {
         // Track, oldest first
@@ -193,12 +193,23 @@ bool InkHUD::RadarApplet::onTouchPoint(uint16_t x, uint16_t y, bool longPress)
     if (longPress)
         return false;
 
-    if (MaxUi::homeMenuAt(width(), height(), x, y)) {
-        inkhud->openMenu();
-        return true;
-    }
     if ((x - 22) * (x - 22) + (y - 22) * (y - 22) <= 20 * 20) {
         inkhud->showApplet(MaxUi::A_HOME);
+        return true;
+    }
+
+    // "SEGNA BASE": first time saves right away; moving an existing base needs a second tap
+    if (MaxUi::radarBaseButtonAt(width(), x, y)) {
+        int32_t bLat, bLon;
+        const bool hasBase = maxBaseGet(bLat, bLon);
+        if (hasBase && !(baseConfirm && Throttle::isWithinTimespanMs(baseConfirmSince, BASE_CONFIRM_MS))) {
+            baseConfirm = true;
+            baseConfirmSince = millis();
+        } else {
+            baseConfirm = false;
+            maxBaseSetHere();
+        }
+        requestUpdate(Drivers::EInk::UpdateTypes::FAST);
         return true;
     }
 

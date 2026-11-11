@@ -28,6 +28,12 @@ class LogoApplet : public SystemApplet, public concurrency::OSThread
     void onReboot() override;
     void onApplyingChanges();
 
+#ifdef T_DECK_MAX
+    // Canvas interface used by the drawing code in Max/MaxUi.h (the badge shown once switched off)
+    using Applet::drawPixel;
+    void txt(int x, int y, const char *text, int font, int align, int valign, uint16_t color);
+#endif
+
   protected:
     int32_t runOnce() override;
 
@@ -36,6 +42,9 @@ class LogoApplet : public SystemApplet, public concurrency::OSThread
     std::string textTitle;
     AppletFont fontTitle;
     bool inverted = false; // Invert colors. Used during shutdown, to restore display health.
+#ifdef T_DECK_MAX
+    bool badge = false; // switched off: draw the T-Deck Max badge instead of the logo
+#endif
 };
 
 } // namespace NicheGraphics::InkHUD
