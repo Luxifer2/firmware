@@ -6,6 +6,7 @@
 //   txt(x, y, text, font, align, valign, color)
 // so the same code can be tried out on a PC (see tools used during development) and runs unchanged inside InkHUD.
 
+#include <algorithm>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@ constexpr uint16_t K = 0; // black
 constexpr uint16_t W = 1; // white
 
 // Positions in the list of user applets (the order they are added in the variant's nicheGraphics.h)
-enum AppletIndex : uint8_t { A_DMS = 1, A_CHANNEL0 = 2, A_POSITIONS = 4, A_RECENTS = 6, A_HEARD = 7, A_FAVORITES = 8, A_HOME = 9, A_CONTROLS = 10 };
+enum AppletIndex : uint8_t { A_DMS = 1, A_CHANNEL0 = 2, A_POSITIONS = 4, A_RECENTS = 6, A_HEARD = 7, A_FAVORITES = 8, A_HOME = 9, A_CONTROLS = 10, A_RADAR = 11 };
 
 enum Font : uint8_t { SMALL = 0, MEDIUM = 1, LARGE = 2 };
 enum Align : uint8_t { LEFT = 0, CENTER = 1, RIGHT = 2 };
@@ -474,6 +475,17 @@ template <class G> void iconSliders(G &g, int cx, int cy, uint16_t c)
     }
 }
 
+// Radar icon for the home tile
+template <class G> void iconRadar(G &g, int cx, int cy, uint16_t c)
+{
+    g.drawCircle(cx, cy, 12, c);
+    g.drawCircle(cx, cy, 6, c);
+    g.drawLine(cx, cy, cx + 9, cy - 8, c);
+    g.drawLine(cx, cy - 1, cx + 8, cy - 9, c);
+    g.fillCircle(cx, cy, 2, c);
+    g.fillCircle(cx - 6, cy + 6, 2, c);
+}
+
 template <class G> void badge(G &g, int cx, int cy, int n)
 {
     char s[12];
@@ -526,7 +538,7 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
     divider(g, 8, w - 8, sy + 21, K);
 
     // --- hexagon tiles
-    static const char *labels[T_COUNT] = {"CHAT", "POSTA", "NODI", "MAPPA", "AMICI", "CONTROLLI", "OPZIONI", "BLOCCA"};
+    static const char *labels[T_COUNT] = {"CHAT", "POSTA", "NODI", "RADAR", "AMICI", "CONTROLLI", "OPZIONI", "BLOCCA"};
     for (int i = 0; i < T_COUNT; i++) {
         const int cx = L.hexCx[i], cy = L.hexCy[i];
         hex(g, cx, cy, L.hexR - 2, K);
@@ -543,7 +555,7 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
             iconNodes(g, cx, iy, K);
             break;
         case T_MAP:
-            iconPin(g, cx, iy, K);
+            iconRadar(g, cx, iy, K);
             break;
         case T_FAVORITES:
             iconHeart(g, cx, iy, K);
@@ -656,6 +668,8 @@ struct Controls {
     bool bluetooth = false;
     bool wifi = false;
     int8_t confirm = -1; // control waiting for a second tap (restarts the device)
+    const char *bootReason = nullptr;
+    uint32_t crashes = 0;
 };
 
 struct ControlRect {
@@ -785,8 +799,275 @@ template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
                 g.txt(tx, r.y + 35, on[i] ? "ACCESO" : "SPENTO", SMALL, LEFT, MIDDLE, fg);
         }
     }
-    g.txt(w / 2, h - 22, "Bluetooth e WiFi riavviano", SMALL, CENTER, MIDDLE, K);
-    g.txt(w / 2, h - 9, "il dispositivo", SMALL, CENTER, MIDDLE, K);
+    char line[48];
+    snprintf(line, sizeof(line), "Ultimo avvio: %s", cs.bootReason ? cs.bootReason : "-");
+    g.txt(w / 2, h - 22, line, SMALL, CENTER, MIDDLE, K);
+    if (cs.crashes)
+        snprintf(line, sizeof(line), "Riavvii per errore: %lu", (unsigned long)cs.crashes);
+    else
+        snprintf(line, sizeof(line), "Nessun errore dall'accensione");
+    g.txt(w / 2, h - 9, line, SMALL, CENTER, MIDDLE, K);
+}
+
+
+// ------------------------------------------------------------------------------------------------
+// Radar: friends around you (north up), your track, GPS data
+// ------------------------------------------------------------------------------------------------
+
+constexpr int RADAR_MAX_BLIPS = 24;
+constexpr int RADAR_MAX_TRACK = 120;
+
+struct RadarBlip {
+    float e, n; // meters east / north of us
+    bool fav;
+    bool selected;
+    char shortName[5];
+};
+
+struct Radar {
+    bool hasPos = false;   // do we know where we are (GPS or phone)
+    bool gpsLock = false;
+    int sats = 0;
+    int speedKmh = -1;     // -1 unknown
+    int altM = 0;
+    bool hasAlt = false;
+    int headingDeg = -1;   // direction of travel, -1 when standing still
+    RadarBlip blips[RADAR_MAX_BLIPS];
+    int nBlips = 0;
+    float trackE[RADAR_MAX_TRACK], trackN[RADAR_MAX_TRACK];
+    int nTrack = 0;
+    int selected = -1;     // index into blips
+    char selName[26] = "";
+    float selDist = 0;
+    int selBearing = 0;
+    int nodesWithoutPos = 0;
+
+    // Back to the defaults without a big temporary (the struct is kept static, off the stack)
+    void clear()
+    {
+        hasPos = gpsLock = hasAlt = false;
+        sats = altM = nBlips = nTrack = nodesWithoutPos = 0;
+        speedKmh = headingDeg = selected = -1;
+        selName[0] = 0;
+        selDist = 0;
+        selBearing = 0;
+    }
+};
+
+// Meters east/north of point b seen from point a (degrees * 1e7). Good enough below ~100 km.
+inline void localOffset(int32_t latA, int32_t lonA, int32_t latB, int32_t lonB, float &e, float &n)
+{
+    const double lat0 = latA * 1e-7 * 0.017453293;
+    n = (float)((latB - latA) * 1e-7 * 111132.0);
+    e = (float)((lonB - lonA) * 1e-7 * 111320.0 * cos(lat0));
+}
+
+inline int bearingDeg(float e, float n)
+{
+    int b = (int)lroundf(atan2f(e, n) * 57.29578f);
+    return (b + 360) % 360;
+}
+
+inline const char *compassName(int deg)
+{
+    static const char *names[8] = {"N", "NE", "E", "SE", "S", "SO", "O", "NO"};
+    return names[((deg + 22) % 360) / 45];
+}
+
+inline void formatDistance(float m, char *out, size_t len)
+{
+    if (m < 1000)
+        snprintf(out, len, "%d m", (int)lroundf(m));
+    else if (m < 10000)
+        snprintf(out, len, "%d,%d km", (int)(m / 1000), ((int)(m / 100)) % 10);
+    else
+        snprintf(out, len, "%d km", (int)lroundf(m / 1000));
+}
+
+inline float radarRange(const Radar &r)
+{
+    float far = 0;
+    for (int i = 0; i < r.nBlips; i++)
+        far = std::max(far, sqrtf(r.blips[i].e * r.blips[i].e + r.blips[i].n * r.blips[i].n));
+    for (int i = 0; i < r.nTrack; i++)
+        far = std::max(far, sqrtf(r.trackE[i] * r.trackE[i] + r.trackN[i] * r.trackN[i]));
+    static const float steps[] = {100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
+    for (float st : steps)
+        if (far <= st)
+            return st;
+    return 100000;
+}
+
+// Square-root scale: nearby friends get more room than far ones. Half radius = a quarter of the range.
+inline float radarScale(float d, float range, int r)
+{
+    if (d <= 0)
+        return 0;
+    return r * sqrtf(std::min(d, range) / range);
+}
+
+struct RadarGeom {
+    int cx, cy, r;
+};
+
+inline RadarGeom radarGeom(int w)
+{
+    RadarGeom g;
+    g.r = (w - 40) / 2;
+    if (g.r > 92)
+        g.r = 92;
+    g.cx = w / 2;
+    g.cy = 58 + g.r;
+    return g;
+}
+
+inline bool radarAt(int w, int x, int y)
+{
+    const RadarGeom G = radarGeom(w);
+    return (x - G.cx) * (x - G.cx) + (y - G.cy) * (y - G.cy) <= (G.r + 6) * (G.r + 6);
+}
+
+template <class G> void dottedCircle(G &g, int cx, int cy, int r, uint16_t c)
+{
+    const int steps = r * 2;
+    for (int i = 0; i < steps; i += 2) {
+        const float a = i * 6.2831853f / steps;
+        g.drawPixel(cx + (int)lroundf(r * cosf(a)), cy + (int)lroundf(r * sinf(a)), c);
+    }
+}
+
+template <class G> void renderRadar(G &g, int w, int h, const Radar &rd)
+{
+    g.fillRect(0, 0, w, h, W);
+    brackets(g, 2, 2, w - 4, h - 4, 10, K);
+
+    // title bar, same as the controls screen
+    hex(g, 22, 22, 13, K);
+    g.fillRect(19, 19, 7, 7, K);
+    g.txt(42, 22, "RADAR", MEDIUM, LEFT, MIDDLE, K);
+    iconMenu(g, w - 58, 17, 13, K);
+    divider(g, 8, w - 8, 41, K);
+
+    const RadarGeom R = radarGeom(w);
+    g.drawCircle(R.cx, R.cy, R.r, K);
+    g.drawCircle(R.cx, R.cy, R.r + 1, K);
+    dottedCircle(g, R.cx, R.cy, R.r / 2, K);
+    for (int i = -R.r + 4; i < R.r - 4; i += 4) {
+        g.drawPixel(R.cx + i, R.cy, K);
+        g.drawPixel(R.cx, R.cy + i, K);
+    }
+    // north marker
+    g.fillTriangle(R.cx, R.cy - R.r - 7, R.cx - 5, R.cy - R.r + 2, R.cx + 5, R.cy - R.r + 2, K);
+    g.fillRect(R.cx - 9, R.cy - R.r + 4, 18, 15, W);
+    g.txt(R.cx, R.cy - R.r + 11, "N", SMALL, CENTER, MIDDLE, K);
+
+    if (!rd.hasPos) {
+        g.fillRect(R.cx - 70, R.cy - 24, 140, 48, W);
+        g.txt(R.cx, R.cy - 12, "SENZA POSIZIONE", SMALL, CENTER, MIDDLE, K);
+        g.txt(R.cx, R.cy + 4, "esci all'aperto", SMALL, CENTER, MIDDLE, K);
+        g.txt(R.cx, R.cy + 18, "e attendi il GPS", SMALL, CENTER, MIDDLE, K);
+    } else {
+        const float range = radarRange(rd);
+        char buf[32];
+        auto place = [&](float e, float n, int &x, int &y) {
+            const float d = sqrtf(e * e + n * n);
+            const float p = radarScale(d, range, R.r);
+            x = R.cx + (d > 0 ? (int)lroundf(e / d * p) : 0);
+            y = R.cy - (d > 0 ? (int)lroundf(n / d * p) : 0);
+        };
+
+        // range labels on the rings
+        formatDistance(range, buf, sizeof(buf));
+        g.txt(R.cx + (int)(R.r * 0.71f) + 3, R.cy + (int)(R.r * 0.71f) + 6, buf, SMALL, LEFT, MIDDLE, K);
+        formatDistance(range / 4, buf, sizeof(buf));
+        g.txt(R.cx + (int)(R.r * 0.36f) + 2, R.cy + (int)(R.r * 0.36f) + 6, buf, SMALL, LEFT, MIDDLE, K);
+
+        // our track: a dotted trail
+        int px = 0, py = 0;
+        for (int i = 0; i < rd.nTrack; i++) {
+            int x, y;
+            place(rd.trackE[i], rd.trackN[i], x, y);
+            if (i > 0) {
+                const int dx = x - px, dy = y - py;
+                const int n = std::max(abs(dx), abs(dy));
+                for (int s = 0; s <= n; s += 3)
+                    g.drawPixel(px + dx * s / std::max(n, 1), py + dy * s / std::max(n, 1), K);
+            }
+            g.fillRect(x - 1, y - 1, 2, 2, K);
+            px = x;
+            py = y;
+        }
+
+        // the others
+        for (int i = 0; i < rd.nBlips; i++) {
+            const RadarBlip &b = rd.blips[i];
+            const bool outside = sqrtf(b.e * b.e + b.n * b.n) > range;
+            int x, y;
+            place(b.e, b.n, x, y);
+            // keep markers inside the ring
+            const float px2 = x - R.cx, py2 = y - R.cy, pd = sqrtf(px2 * px2 + py2 * py2);
+            if (pd > R.r - 6 && pd > 0) {
+                x = R.cx + (int)lroundf(px2 * (R.r - 6) / pd);
+                y = R.cy + (int)lroundf(py2 * (R.r - 6) / pd);
+            }
+            if (b.fav)
+                miniHeart(g, x, y, K);
+            else if (outside)
+                g.drawCircle(x, y, 3, K);
+            else
+                g.fillCircle(x, y, 3, K);
+            if (b.selected) {
+                g.drawCircle(x, y, 8, K);
+                g.drawCircle(x, y, 9, K);
+                const bool right = x < R.cx + R.r - 40;
+                g.fillRect(right ? x + 11 : x - 11 - 34, y - 7, 34, 14, W);
+                g.txt(right ? x + 12 : x - 12, y, b.shortName, SMALL, right ? LEFT : RIGHT, MIDDLE, K);
+            }
+        }
+
+        // us: a small hexagon, with an arrow when moving
+        hexFilled(g, R.cx, R.cy, 5, K);
+        if (rd.headingDeg >= 0) {
+            const float a = rd.headingDeg * 0.017453293f;
+            const int tx = R.cx + (int)lroundf(22 * sinf(a)), ty = R.cy - (int)lroundf(22 * cosf(a));
+            const int lx = R.cx + (int)lroundf(14 * sinf(a - 0.35f)), ly = R.cy - (int)lroundf(14 * cosf(a - 0.35f));
+            const int rx = R.cx + (int)lroundf(14 * sinf(a + 0.35f)), ry = R.cy - (int)lroundf(14 * cosf(a + 0.35f));
+            g.drawLine(R.cx, R.cy, tx, ty, K);
+            g.fillTriangle(tx, ty, lx, ly, rx, ry, K);
+        }
+    }
+
+    // --- below the radar: the selected friend, then GPS data
+    const int y0 = R.cy + R.r + 12;
+    char line[48];
+    if (!rd.hasPos) {
+        g.txt(w / 2, y0 + 6, "La posizione arriva dal GPS", SMALL, CENTER, MIDDLE, K);
+        g.txt(w / 2, y0 + 21, "o dal telefono collegato", SMALL, CENTER, MIDDLE, K);
+    } else if (rd.selected >= 0) {
+        g.txt(12, y0 + 6, rd.selName, MEDIUM, LEFT, MIDDLE, K);
+        char d[16];
+        formatDistance(rd.selDist, d, sizeof(d));
+        snprintf(line, sizeof(line), "%s verso %s", d, compassName(rd.selBearing));
+        g.txt(12, y0 + 24, line, SMALL, LEFT, MIDDLE, K);
+        if (rd.nBlips > 1)
+            g.txt(w - 12, y0 + 24, "tocca: altro", SMALL, RIGHT, MIDDLE, K);
+    } else {
+        g.txt(w / 2, y0 + 6, "Nessun nodo con posizione", SMALL, CENTER, MIDDLE, K);
+        g.txt(w / 2, y0 + 21, "per ora sei solo qui", SMALL, CENTER, MIDDLE, K);
+    }
+
+    divider(g, 8, w - 8, h - 24, K);
+    if (rd.gpsLock) {
+        char sp[12] = "-", al[12] = "-";
+        if (rd.speedKmh >= 0)
+            snprintf(sp, sizeof(sp), "%d km/h", rd.speedKmh);
+        if (rd.hasAlt)
+            snprintf(al, sizeof(al), "%d m", rd.altM);
+        snprintf(line, sizeof(line), "SAT %d   %s   ALT %s", rd.sats, sp, al);
+    } else {
+        snprintf(line, sizeof(line), "GPS: cerco satelliti (%d)", rd.sats);
+    }
+    g.txt(w / 2, h - 12, line, SMALL, CENTER, MIDDLE, K);
 }
 
 } // namespace MaxUi

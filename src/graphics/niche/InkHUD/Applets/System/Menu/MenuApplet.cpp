@@ -229,7 +229,14 @@ void InkHUD::MenuApplet::onForeground()
         inkhud->forceRegionMenu = false; // consume one-shot flag
         showPage(MenuPage::REGION);
 
-    } else {
+    }
+#ifdef T_DECK_MAX
+    else if (inkhud->forceSendMenu) {
+        inkhud->forceSendMenu = false; // one-shot: opened from the chat with the bubble key
+        showPage(MenuPage::SEND);
+    }
+#endif
+    else {
         showPage(MenuPage::ROOT);
     }
 
@@ -520,7 +527,11 @@ void InkHUD::MenuApplet::execute(MenuItem item)
         break;
 
     case STORE_CANNEDMESSAGE_SELECTION: {
+#ifdef T_DECK_MAX
+        const uint8_t prefixItems = supportsFreeTextKeyboard(inkhud, settings) ? 3 : 2; // + the "Scrivi" header
+#else
         const uint8_t prefixItems = supportsFreeTextKeyboard(inkhud, settings) ? 2 : 1;
+#endif
         cm.selectedMessageItem = &cm.messageItems.at(cursor - prefixItems);
     } break;
 
@@ -2625,11 +2636,20 @@ void InkHUD::MenuApplet::populateBuzzerModePage()
 void InkHUD::MenuApplet::populateSendPage()
 {
     // Position / NodeInfo packet
+#ifdef T_DECK_MAX
+    items.push_back(MenuItem::Header("Scrivi"));
+    items.push_back(MenuItem("Invia la mia posizione", MenuAction::SEND_PING, MenuPage::EXIT));
+#else
     items.push_back(MenuItem("Ping", MenuAction::SEND_PING, MenuPage::EXIT));
+#endif
 
     // Offer free text with either a physical or on-screen keyboard.
     if (supportsFreeTextKeyboard(inkhud, settings))
+#ifdef T_DECK_MAX
+        items.push_back(MenuItem("Scrivi con la tastiera", MenuAction::FREE_TEXT, MenuPage::SEND));
+#else
         items.push_back(MenuItem("Free Text", MenuAction::FREE_TEXT, MenuPage::SEND));
+#endif
 
     // One menu item for each canned message
     uint8_t count = cm.store->size();

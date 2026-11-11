@@ -54,8 +54,13 @@ void CannedMessageStore::load()
 #ifdef FSCom
     {
         concurrency::LockGuard guard(spiLock);
-        if (!FSCom.exists(cannedMessagesConfigFile))
+        if (!FSCom.exists(cannedMessagesConfigFile)) {
+#ifdef T_DECK_MAX
+            // Ready-made quick messages until the phone app sets others
+            messages = {"Tutto ok", "Sto arrivando", "Dove sei?", "Arrivo tra 10 minuti", "Aspettami", "Chiamami", "Si", "No"};
+#endif
             return;
+        }
     }
 #endif
 

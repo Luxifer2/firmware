@@ -104,6 +104,9 @@ class InkHUD
 
     // Used by TipsApplet to force menu to start on Region selection
     bool forceRegionMenu = false;
+#ifdef T_DECK_MAX
+    bool forceSendMenu = false; // next time the menu opens, start on the "send" page
+#endif
 
     // Input mode hint for devices that use a left/right rocker plus center button
     bool twoWayRocker = false;

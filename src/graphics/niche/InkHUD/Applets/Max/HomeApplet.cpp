@@ -64,7 +64,7 @@ bool InkHUD::HomeApplet::onTouchPoint(uint16_t x, uint16_t y, bool longPress)
         inkhud->showApplet(MaxUi::A_HEARD);
         return true;
     case MaxUi::T_MAP:
-        inkhud->showApplet(MaxUi::A_POSITIONS);
+        inkhud->showApplet(MaxUi::A_RADAR);
         return true;
     case MaxUi::T_FAVORITES:
         if (!inkhud->showApplet(MaxUi::A_FAVORITES))

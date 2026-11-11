@@ -50,6 +50,7 @@ void InkHUD::ControlsApplet::onRender(bool full)
     cs.bluetooth = config.bluetooth.enabled;
     cs.wifi = config.network.wifi_enabled;
     cs.confirm = confirm;
+    cs.bootReason = tDeckMaxBootReason(&cs.crashes);
     MaxUi::renderControls(*this, width(), height(), cs);
 }
 

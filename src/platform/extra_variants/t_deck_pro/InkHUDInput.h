@@ -40,8 +40,8 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
     // The three touch keys under the screen of the T-Deck Max, counted left to right:
     // 0 = heart, 1 = speech bubble, 2 = arrow. Outside menus they are fixed shortcuts:
     //   heart:  friends (favourites map; recent nodes if the map is not enabled)
-    //   bubble: chat (channel 0, pressed again: direct messages)
-    //   arrow:  home screen (also the side button that cannot be told apart from it)
+    //   bubble: chat (channel 0); pressed again inside a chat: write a message
+    //   arrow:  home screen (the side button moves on to the next screen)
     //   arrow held for 1.5 s: screen and keyboard lights on / off
     //   heart held for 1.5 s (or tapped twice): lock / unlock the screen
     // With the menu open: heart / arrow move up / down, bubble chooses. While typing: heart cancels, bubble sends.
@@ -91,12 +91,16 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
             else if (systemHandlingInput)
                 hud->longpress();
             else {
+                // Not in a chat: open the chat. Already in a chat: write a message.
                 tDeckMaxUnread = 0;
                 auto *active = hud->getActiveApplet();
-                const bool onChannel0 =
-                    hud->userApplets.size() > MaxUi::A_CHANNEL0 && active == hud->userApplets.at(MaxUi::A_CHANNEL0);
-                if (!hud->showApplet(onChannel0 ? MaxUi::A_DMS : MaxUi::A_CHANNEL0))
+                auto isApplet = [&](uint8_t i) { return hud->userApplets.size() > i && active == hud->userApplets.at(i); };
+                if (isApplet(MaxUi::A_CHANNEL0) || isApplet(MaxUi::A_DMS)) {
+                    hud->forceSendMenu = true;
+                    hud->openMenu();
+                } else {
                     hud->showApplet(MaxUi::A_CHANNEL0);
+                }
             }
             break;
         case 2:

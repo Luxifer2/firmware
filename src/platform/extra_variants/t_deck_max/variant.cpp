@@ -168,4 +168,63 @@ void earlyInitVariant()
     digitalWrite(PIN_EINK_FRONTLIGHT, LOW);
 }
 
+// Why did we start? Shown on the controls screen, so restarts can be diagnosed without a computer.
+// The counter lives in RTC memory: it survives crashes and watchdog resets, and starts from zero at power-on.
+#include <esp_attr.h>
+#include <esp_system.h>
+RTC_NOINIT_ATTR static uint32_t bootMagic;
+RTC_NOINIT_ATTR static uint32_t bootCrashes;
+
+const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn)
+{
+    static const char *text = nullptr;
+    static uint32_t crashes = 0;
+    if (!text) {
+        const esp_reset_reason_t r = esp_reset_reason();
+        if (bootMagic != 0x7DEC4A11 || r == ESP_RST_POWERON) {
+            bootMagic = 0x7DEC4A11;
+            bootCrashes = 0;
+        }
+        switch (r) {
+        case ESP_RST_POWERON:
+            text = "ACCENSIONE";
+            break;
+        case ESP_RST_SW:
+            text = "RIAVVIO NORMALE";
+            break;
+        case ESP_RST_PANIC:
+            text = "ERRORE SOFTWARE";
+            bootCrashes++;
+            break;
+        case ESP_RST_INT_WDT:
+        case ESP_RST_TASK_WDT:
+        case ESP_RST_WDT:
+            text = "BLOCCO (WATCHDOG)";
+            bootCrashes++;
+            break;
+        case ESP_RST_BROWNOUT:
+            text = "CALO DI TENSIONE";
+            bootCrashes++;
+            break;
+        case ESP_RST_DEEPSLEEP:
+            text = "RISVEGLIO DAL SONNO";
+            break;
+        case ESP_RST_EXT:
+            text = "TASTO RESET";
+            break;
+        case ESP_RST_USB:
+            text = "DA USB";
+            break;
+        default:
+            text = "ALTRO";
+            bootCrashes++;
+            break;
+        }
+        crashes = bootCrashes;
+    }
+    if (crashesSincePowerOn)
+        *crashesSincePowerOn = crashes;
+    return text;
+}
+
 #endif // T_DECK_MAX
