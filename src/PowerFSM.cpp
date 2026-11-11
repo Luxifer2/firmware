@@ -87,9 +87,14 @@ static void screenOffForTimeout()
     t5TouchSetForcedByTimeout(true);
 #endif
 #ifdef MESHTASTIC_INCLUDE_INKHUD
+#ifdef T_DECK_MAX
+    // Touch stays on (the device restarted when it came back after the timeout); only the lights go off
+    tDeckMaxSetScreenDark(true);
+#else
     NicheGraphics::InkHUD::InkHUD::getInstance()->setTouchTimedOut(true);
 #ifdef T_DECK_PRO
     tDeckProUpdateBacklights();
+#endif
 #endif
 #endif
 }
@@ -101,9 +106,13 @@ static void screenOnFromUserInput()
     t5TouchHandleUserInput();
 #endif
 #ifdef MESHTASTIC_INCLUDE_INKHUD
+#ifdef T_DECK_MAX
+    tDeckMaxSetScreenDark(false);
+#else
     NicheGraphics::InkHUD::InkHUD::getInstance()->setTouchTimedOut(false);
 #ifdef T_DECK_PRO
     tDeckProUpdateBacklights();
+#endif
 #endif
 #endif
 }

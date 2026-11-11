@@ -75,9 +75,18 @@ bool tDeckProIsV11()
     return ready;
 }
 
+// Screen timeout (PowerFSM "dark" state): lights off, touch left alone
+static bool screenDark = false;
+
+void tDeckMaxSetScreenDark(bool dark)
+{
+    screenDark = dark;
+    tDeckProUpdateBacklights();
+}
+
 void tDeckProUpdateBacklights(bool sleeping)
 {
-    const bool allowed = !sleeping && !NicheGraphics::InkHUD::InkHUD::getInstance()->isTouchTimedOut();
+    const bool allowed = !sleeping && !screenDark;
     digitalWrite(KB_BL_PIN, keyLightEnabled && allowed);
     analogWrite(PIN_EINK_FRONTLIGHT, (screenLightEnabled && allowed) ? 64 : 0);
 }

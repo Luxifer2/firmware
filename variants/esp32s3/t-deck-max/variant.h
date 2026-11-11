@@ -8,6 +8,7 @@
 bool tDeckProIsV11();
 void tDeckProSetVibration(int pin, bool on);
 void tDeckProUpdateBacklights(bool sleeping = false);
+void tDeckMaxSetScreenDark(bool dark); // screen timeout: lights off, touch stays on
 void tDeckProToggleBacklights();
 #define EXT_NOTIFY_VIBRA_WRITE(pin, on) tDeckProSetVibration(pin, on)
 #endif
