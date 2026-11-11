@@ -103,7 +103,7 @@ void InkHUD::BootApplet::onRender(bool full)
 {
     (void)full;
     bootCheck.shown = shown;
-    MaxUi::renderBoot(*this, width(), height(), boot);
+    MaxUi::renderBoot(*this, width(), height(), bootCheck);
 }
 
 bool InkHUD::BootApplet::onTouchPoint(uint16_t x, uint16_t y, bool longPress)
