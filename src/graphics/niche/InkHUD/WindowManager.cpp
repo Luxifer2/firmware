@@ -11,6 +11,7 @@
 #include "./Applets/System/Notification/NotificationApplet.h"
 #include "./Applets/System/Notification/TouchStatusApplet.h"
 #ifdef T_DECK_MAX
+#include "./Applets/Max/BootApplet.h"
 #include "./Applets/Max/LockApplet.h"
 #endif
 #include "./Applets/System/Pairing/PairingApplet.h"
@@ -583,6 +584,7 @@ void InkHUD::WindowManager::createSystemApplets()
     addSystemApplet("Logo", new LogoApplet, new Tile);
 #ifdef T_DECK_MAX
     addSystemApplet("Lock", new LockApplet, new Tile);
+    addSystemApplet("Boot", new BootApplet, new Tile);
 #endif
     addSystemApplet("Pairing", new PairingApplet, new Tile);
     addSystemApplet("Tips", new TipsApplet, new Tile);
@@ -619,6 +621,7 @@ void InkHUD::WindowManager::placeSystemTiles()
     inkhud->getSystemApplet("Logo")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
 #ifdef T_DECK_MAX
     inkhud->getSystemApplet("Lock")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
+    inkhud->getSystemApplet("Boot")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
 #endif
     inkhud->getSystemApplet("Pairing")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());
     inkhud->getSystemApplet("Tips")->getTile()->setRegion(0, 0, inkhud->width(), inkhud->height());

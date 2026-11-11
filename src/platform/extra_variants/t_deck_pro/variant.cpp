@@ -75,6 +75,9 @@ void tDeckMaxTouchKey(uint8_t, bool) {}
 #endif
 
 static bool is_cst3530 = false;
+#if defined(T_DECK_MAX) && defined(MESHTASTIC_INCLUDE_INKHUD)
+bool tDeckMaxTouchOk = false;
+#endif
 volatile bool touch_isr = false;
 #define CST3530_ADDR 0x1A
 constexpr uint32_t CST3530_FAIL_HOLD_MS = 100;
@@ -237,8 +240,12 @@ void lateInitVariant()
         }
     }
 
-    if (!is_cst3530 && !touchPanel().begin())
+    const bool touchOk = is_cst3530 || touchPanel().begin();
+    if (!touchOk)
         LOG_WARN("CST328 initialization failed");
+#if defined(T_DECK_MAX) && defined(MESHTASTIC_INCLUDE_INKHUD)
+    tDeckMaxTouchOk = touchOk;
+#endif
 
     touchScreenImpl1 = new TouchScreenImpl1(EINK_WIDTH, EINK_HEIGHT, readTouch);
     touchScreenImpl1->init();

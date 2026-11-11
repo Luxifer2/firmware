@@ -168,6 +168,12 @@ void earlyInitVariant()
     digitalWrite(PIN_EINK_FRONTLIGHT, LOW);
 }
 
+bool tDeckMaxHapticOk()
+{
+    tDeckProIsV11(); // brings the driver up the first time
+    return hapticReady;
+}
+
 // Why did we start? Shown on the controls screen, so restarts can be diagnosed without a computer.
 // The counter lives in RTC memory: it survives crashes and watchdog resets, and starts from zero at power-on.
 #include <esp_attr.h>

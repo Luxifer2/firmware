@@ -1070,4 +1070,83 @@ template <class G> void renderRadar(G &g, int w, int h, const Radar &rd)
     g.txt(w / 2, h - 12, line, SMALL, CENTER, MIDDLE, K);
 }
 
+
+// ------------------------------------------------------------------------------------------------
+// Boot check: modules tested one by one; stops on an error until touched
+// ------------------------------------------------------------------------------------------------
+
+enum CheckState : uint8_t { CK_OK, CK_WARN, CK_FAIL };
+
+struct BootLine {
+    const char *name;
+    char value[16];
+    CheckState state;
+};
+
+struct Boot {
+    static constexpr int MAX_LINES = 8;
+    BootLine lines[MAX_LINES];
+    int n = 0;
+    int shown = 0; // lines revealed so far
+    const char *version = "";
+
+    bool done() const { return shown >= n; }
+    int firstFailure() const
+    {
+        for (int i = 0; i < n; i++)
+            if (lines[i].state == CK_FAIL)
+                return i;
+        return -1;
+    }
+};
+
+template <class G> void renderBoot(G &g, int w, int h, const Boot &b)
+{
+    g.fillRect(0, 0, w, h, W);
+    brackets(g, 2, 2, w - 4, h - 4, 10, K);
+
+    hexFilled(g, 22, 22, 13, K);
+    hex(g, 22, 22, 7, W);
+    g.txt(42, 16, "AVVIO SISTEMA", MEDIUM, LEFT, MIDDLE, K);
+    g.txt(42, 32, "controllo moduli", SMALL, LEFT, MIDDLE, K);
+    divider(g, 8, w - 8, 45, K);
+
+    const int top = 62, step = 20;
+    for (int i = 0; i < b.n && i < b.shown; i++) {
+        const BootLine &L = b.lines[i];
+        const int y = top + i * step;
+        g.txt(12, y, ">", SMALL, LEFT, MIDDLE, K);
+        g.txt(24, y, L.name, SMALL, LEFT, MIDDLE, K);
+        for (int x = 112; x < w - 84; x += 3)
+            g.drawPixel(x, y + 4, K);
+        if (L.state == CK_FAIL) {
+            g.fillRect(w - 82, y - 9, 72, 18, K);
+            g.txt(w - 46, y, L.value, SMALL, CENTER, MIDDLE, W);
+        } else {
+            g.txt(w - 12, y, L.value, SMALL, RIGHT, MIDDLE, K);
+            if (L.state == CK_WARN)
+                g.drawLine(w - 82, y + 9, w - 12, y + 9, K);
+        }
+    }
+    // cursor on the line being checked
+    if (!b.done())
+        g.fillRect(12, top + b.shown * step - 6, 7, 12, K);
+
+    if (b.done()) {
+        const int fail = b.firstFailure();
+        const int by = top + b.n * step + 4;
+        g.fillRect(8, by, w - 16, 26, K);
+        char line[40];
+        if (fail < 0) {
+            g.txt(w / 2, by + 13, "SISTEMA PRONTO", MEDIUM, CENTER, MIDDLE, W);
+        } else {
+            snprintf(line, sizeof(line), "ERRORE: %s", b.lines[fail].name);
+            g.txt(w / 2, by + 13, line, MEDIUM, CENTER, MIDDLE, W);
+            g.txt(w / 2, by + 40, "tocca lo schermo o un tasto", SMALL, CENTER, MIDDLE, K);
+            g.txt(w / 2, by + 53, "per continuare", SMALL, CENTER, MIDDLE, K);
+        }
+    }
+    g.txt(w / 2, h - 12, b.version, SMALL, CENTER, MIDDLE, K);
+}
+
 } // namespace MaxUi

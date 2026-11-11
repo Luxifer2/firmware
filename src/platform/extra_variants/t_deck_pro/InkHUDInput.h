@@ -14,6 +14,7 @@
 #include "sleep.h"
 #include <cstring>
 #ifdef T_DECK_MAX
+#include "graphics/niche/InkHUD/Applets/Max/BootApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/LockApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/MaxUi.h"
 #endif
@@ -50,6 +51,13 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
     {
         auto *hud = NicheGraphics::InkHUD::InkHUD::getInstance();
         powerFSM.trigger(EVENT_INPUT);
+
+        // Boot check on screen: a key skips the animation, or continues to the home screen
+        if (NicheGraphics::InkHUD::BootApplet::showing(hud)) {
+            if (event != TDeckMaxKeyEvent::HOLD)
+                NicheGraphics::InkHUD::BootApplet::userInput(hud);
+            return;
+        }
 
         // Locked: only the unlock gesture does anything
         auto *lockApplet = hud->getSystemApplet("Lock");

@@ -4,6 +4,8 @@
 
 #include "./HomeApplet.h"
 
+#include "./BootApplet.h"
+
 #include "./LockApplet.h"
 #include "./MaxInfo.h"
 #include "./MaxUi.h"
@@ -94,7 +96,7 @@ int32_t InkHUD::HomeApplet::runOnce()
             busy |= (sa->lockRendering || sa->handleInput) && sa->isForeground();
         if (!busy) {
             shownAtBoot = true;
-            inkhud->showApplet(MaxUi::A_HOME);
+            BootApplet::start(inkhud); // module check, then the home screen
         }
         return 3 * 1000UL;
     }

@@ -19,6 +19,8 @@ extern char tDeckMaxDiag[48]; // last key event seen (diagnostics)
 bool tDeckMaxGetLight(uint8_t which);          // 0 = screen light, 1 = keyboard light
 void tDeckMaxSetLight(uint8_t which, bool on);
 const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn); // why the device last started
+extern bool tDeckMaxTouchOk; // touch controller answered at boot
+bool tDeckMaxHapticOk();     // vibration driver answered
 #endif
 
 // Display (E-Ink, GDEQ031T10)
