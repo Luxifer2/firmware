@@ -168,13 +168,18 @@ void InkHUD::RadarApplet::onRender(bool full)
             b.n = cands[i].n;
             b.fav = cands[i].fav;
             b.selected = i == sel;
-            snprintf(b.shortName, sizeof(b.shortName), "%s", cands[i].node->user.short_name);
+            snprintf(b.shortName, sizeof(b.shortName), "%s", nodeInfoLiteHasUser(cands[i].node) ? cands[i].node->short_name : "?");
         }
         rd.nBlips = nc;
         rd.selected = sel;
         if (sel >= 0) {
-            const char *name = cands[sel].node->user.long_name;
-            snprintf(rd.selName, sizeof(rd.selName), "%s", name[0] ? name : cands[sel].node->user.short_name);
+            const meshtastic_NodeInfoLite *n = cands[sel].node;
+            if (nodeInfoLiteHasUser(n) && n->long_name[0])
+                snprintf(rd.selName, sizeof(rd.selName), "%s", n->long_name);
+            else if (nodeInfoLiteHasUser(n) && n->short_name[0])
+                snprintf(rd.selName, sizeof(rd.selName), "%s", n->short_name);
+            else
+                snprintf(rd.selName, sizeof(rd.selName), "!%08x", (unsigned)n->num);
             rd.selDist = cands[sel].d;
             rd.selBearing = MaxUi::bearingDeg(cands[sel].e, cands[sel].n);
         }
