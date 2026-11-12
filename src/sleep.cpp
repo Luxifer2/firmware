@@ -555,6 +555,11 @@ esp_sleep_wakeup_cause_t doLightSleep(uint64_t sleepMsec) // FIXME, use a more r
 #endif
 #endif
 #if defined(WAKE_ON_TOUCH)
+#ifdef T_DECK_PRO
+    // The touch ISR is attached on the falling edge. Armed as a low-level wake source it would fire nonstop
+    // while a finger keeps the line low after waking, and trip the interrupt watchdog: mask it while armed.
+    gpio_intr_disable((gpio_num_t)SCREEN_TOUCH_INT);
+#endif
     gpio_wakeup_enable((gpio_num_t)SCREEN_TOUCH_INT, GPIO_INTR_LOW_LEVEL);
 #endif
 #ifdef MOTION_WAKE_INT_PIN
@@ -640,7 +645,11 @@ esp_sleep_wakeup_cause_t doLightSleep(uint64_t sleepMsec) // FIXME, use a more r
 #undef INPUTDRIVER_WAKE_BTN_PIN
 #endif
 #if defined(WAKE_ON_TOUCH)
-    gpio_wakeup_disable((gpio_num_t)SCREEN_TOUCH_INT);
+    gpio_wakeup_disable((gpio_num_t)SCREEN_TOUCH_INT); // leaves the level type in place
+#ifdef T_DECK_PRO
+    gpio_set_intr_type((gpio_num_t)SCREEN_TOUCH_INT, GPIO_INTR_NEGEDGE);
+    gpio_intr_enable((gpio_num_t)SCREEN_TOUCH_INT);
+#endif
 #endif
 #ifdef MOTION_WAKE_INT_PIN
     // Unconditional: the config can have changed while we were asleep.
