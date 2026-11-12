@@ -111,7 +111,7 @@ void InkHUD::ThreadedMessageApplet::onRender(bool full)
         // - time received, if possible
         std::string info;
         if (outgoing)
-            info += "Me";
+            info += UI_TEXT("Me", "Io");
         else {
             // Check if sender is node db
             meshtastic_NodeInfoLite *sender = nodeDB->getMeshNode(m.sender);

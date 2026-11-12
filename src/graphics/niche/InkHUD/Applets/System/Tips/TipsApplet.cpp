@@ -47,8 +47,9 @@ InkHUD::TipsApplet::TipsApplet()
 
 void InkHUD::TipsApplet::onRender(bool full)
 {
-    const char *continuePrompt =
-        (inkhud && inkhud->hasTouchEnabledProvider()) ? "Tap screen to continue" : "Press button to continue";
+    const char *continuePrompt = (inkhud && inkhud->hasTouchEnabledProvider())
+                                     ? UI_TEXT("Tap screen to continue", "Tocca lo schermo per continuare")
+                                     : "Press button to continue";
 
     switch (tipQueue.front()) {
     case Tip::WELCOME:
@@ -57,7 +58,7 @@ void InkHUD::TipsApplet::onRender(bool full)
 
     case Tip::FINISH_SETUP: {
         setFont(fontMedium);
-        const char *title = "Tip: Finish Setup";
+        const char *title = UI_TEXT("Tip: Finish Setup", "Completa la configurazione");
         uint16_t h = getWrappedTextHeight(0, width(), title);
         printWrapped(0, 0, width(), title);
 
@@ -70,43 +71,47 @@ void InkHUD::TipsApplet::onRender(bool full)
             cursorY += bh + (fontSmall.lineHeight() / 3);
         };
 
-        drawBullet("- connect antenna");
-        drawBullet("- connect a client app");
+        drawBullet(UI_TEXT("- connect antenna", "- collega l'antenna"));
+        drawBullet(UI_TEXT("- connect a client app", "- collega l'app Meshtastic"));
 
         if (config.lora.region == meshtastic_Config_LoRaConfig_RegionCode_UNSET)
-            drawBullet("- set region");
+            drawBullet(UI_TEXT("- set region", "- imposta la regione"));
 
         if (!(*config.device.tzdef && config.device.tzdef[0] != 0))
-            drawBullet("- set timezone");
+            drawBullet(UI_TEXT("- set timezone", "- imposta il fuso orario"));
 
         cursorY += fontSmall.lineHeight() / 2;
-        drawBullet("More info at meshtastic.org");
+        drawBullet(UI_TEXT("More info at meshtastic.org", "Altre informazioni su meshtastic.org"));
 
         printAt(0, Y(1.0), continuePrompt, LEFT, BOTTOM);
     } break;
 
     case Tip::PICK_REGION: {
         setFont(fontMedium);
-        printAt(0, 0, "Set Region");
+        printAt(0, 0, UI_TEXT("Set Region", "Regione radio"));
 
         setFont(fontSmall);
-        printWrapped(0, fontMedium.lineHeight() * 1.5, width(), "Please select your LoRa region to complete setup.");
+        printWrapped(0, fontMedium.lineHeight() * 1.5, width(),
+                     UI_TEXT("Please select your LoRa region to complete setup.",
+                             "Scegli la regione LoRa per completare la configurazione."));
 
-        printAt(0, Y(1.0), "Press button to choose", LEFT, BOTTOM);
+        printAt(0, Y(1.0), UI_TEXT("Press button to choose", "Vai avanti per scegliere"), LEFT, BOTTOM);
     } break;
 
     case Tip::SAFE_SHUTDOWN: {
         setFont(fontMedium);
 
-        const char *title = "Tip: Shutdown";
+        const char *title = UI_TEXT("Tip: Shutdown", "Spegnimento");
         uint16_t h = getWrappedTextHeight(0, width(), title);
         printWrapped(0, 0, width(), title);
 
         setFont(fontSmall);
         int16_t cursorY = h + fontSmall.lineHeight();
 
-        const char *body = "Before removing power, please shut down from InkHUD menu, or a client app.\n\n"
-                           "This ensures data is saved.";
+        const char *body = UI_TEXT("Before removing power, please shut down from InkHUD menu, or a client app.\n\n"
+                                   "This ensures data is saved.",
+                                   "Prima di togliere corrente, spegni dal menu (Salva e spegni) o dall'app.\n\n"
+                                   "In questo modo i dati vengono salvati.");
 
         uint16_t bodyH = getWrappedTextHeight(0, width(), body);
         printWrapped(0, cursorY, width(), body);
@@ -118,15 +123,17 @@ void InkHUD::TipsApplet::onRender(bool full)
     case Tip::CUSTOMIZATION: {
         setFont(fontMedium);
 
-        const char *title = "Tip: Customization";
+        const char *title = UI_TEXT("Tip: Customization", "Personalizzazione");
         uint16_t h = getWrappedTextHeight(0, width(), title);
         printWrapped(0, 0, width(), title);
 
         setFont(fontSmall);
         int16_t cursorY = h + fontSmall.lineHeight();
 
-        const char *body = "Configure & control display with the InkHUD menu. "
-                           "Optional features, layout, rotation, and more.";
+        const char *body = UI_TEXT("Configure & control display with the InkHUD menu. "
+                                   "Optional features, layout, rotation, and more.",
+                                   "Dal menu puoi configurare lo schermo: "
+                                   "funzioni opzionali, disposizione, rotazione e altro.");
 
         uint16_t bodyH = getWrappedTextHeight(0, width(), body);
         printWrapped(0, cursorY, width(), body);
@@ -141,7 +148,7 @@ void InkHUD::TipsApplet::onRender(bool full)
 #else
         setFont(fontMedium);
 
-        const char *title = "Tip: Buttons";
+        const char *title = UI_TEXT("Tip: Buttons", "Tasti");
         uint16_t h = getWrappedTextHeight(0, width(), title);
         printWrapped(0, 0, width(), title);
 
@@ -154,7 +161,14 @@ void InkHUD::TipsApplet::onRender(bool full)
             cursorY += bh + (fontSmall.lineHeight() / 3);
         };
 
-#if defined(T_DECK_PRO)
+#if defined(T_DECK_MAX)
+        drawBullet("Tasti sotto lo schermo");
+        drawBullet("- cuore: mappa preferiti. Tenuto premuto: blocca o sblocca.");
+        drawBullet("- fumetto: chat. Premuto di nuovo nella chat: scrivi.");
+        drawBullet("- freccia: Home. Tenuta premuta: luci.");
+        drawBullet("Tasto laterale: schermata successiva.");
+        drawBullet("Menu: icona in alto a destra.");
+#elif defined(T_DECK_PRO)
         drawBullet("Touch: tap to select, hold for menu.");
         drawBullet("Swipe to scroll or change app.");
         drawBullet("Use the keyboard to type messages.");
@@ -189,7 +203,7 @@ void InkHUD::TipsApplet::onRender(bool full)
     case Tip::ROTATION: {
         setFont(fontMedium);
 
-        const char *title = "Tip: Rotation";
+        const char *title = UI_TEXT("Tip: Rotation", "Rotazione");
         uint16_t h = getWrappedTextHeight(0, width(), title);
         printWrapped(0, 0, width(), title);
 
@@ -197,8 +211,9 @@ void InkHUD::TipsApplet::onRender(bool full)
         if (!settings->joystick.enabled) {
             int16_t cursorY = h + fontSmall.lineHeight();
 
-            const char *body = "To rotate the display, use the InkHUD menu. "
-                               "Long-press the user button > Options > Rotate.";
+            const char *body = UI_TEXT("To rotate the display, use the InkHUD menu. "
+                                       "Long-press the user button > Options > Rotate.",
+                                       "Per ruotare lo schermo usa il menu: Opzioni > Ruota.");
 
             uint16_t bh = getWrappedTextHeight(0, width(), body);
             printWrapped(0, cursorY, width(), body);
@@ -249,7 +264,7 @@ void InkHUD::TipsApplet::renderT5S3ButtonsTip()
     drawBullet("HOME button");
     drawBullet("- press: back/exit in InkHUD and open App switcher");
 
-    printAt(0, Y(1.0), "Tap screen to continue", LEFT, BOTTOM);
+    printAt(0, Y(1.0), UI_TEXT("Tap screen to continue", "Tocca lo schermo per continuare"), LEFT, BOTTOM);
 }
 #endif
 
@@ -299,8 +314,9 @@ void InkHUD::TipsApplet::renderWelcome()
 
     // Block 3 - press to continue
     // ============================
-    const char *continuePrompt =
-        (inkhud && inkhud->hasTouchEnabledProvider()) ? "Tap screen to continue" : "Press button to continue";
+    const char *continuePrompt = (inkhud && inkhud->hasTouchEnabledProvider())
+                                     ? UI_TEXT("Tap screen to continue", "Tocca lo schermo per continuare")
+                                     : "Press button to continue";
     printAt(X(0.5), Y(1), continuePrompt, CENTER, BOTTOM);
 }
 

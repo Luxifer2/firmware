@@ -19,6 +19,13 @@
 #include "mesh/MeshTypes.h"
 
 #include "./AppletFont.h"
+
+// Text shown on screen: Italian on the T-Deck Max, English on every other device
+#ifdef T_DECK_MAX
+#define UI_TEXT(en, it) it
+#else
+#define UI_TEXT(en, it) en
+#endif
 #include "./Applets/System/Notification/Notification.h" // The notification object, not the applet
 #include "./InkHUD.h"
 #include "./Persistence.h"

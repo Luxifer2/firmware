@@ -33,9 +33,9 @@ void setupNicheGraphics()
     auto *inkhud = InkHUD::InkHUD::getInstance();
     inkhud->setDriver(driver);
     inkhud->setDisplayResilience(7, 1.5);
-    InkHUD::Applet::fontLarge = FREESANS_12PT_WIN1253;
-    InkHUD::Applet::fontMedium = FREESANS_9PT_WIN1253;
-    InkHUD::Applet::fontSmall = FREESANS_6PT_WIN1253;
+    InkHUD::Applet::fontLarge = FREESANS_12PT_WIN1252;
+    InkHUD::Applet::fontMedium = FREESANS_9PT_WIN1252;
+    InkHUD::Applet::fontSmall = FREESANS_6PT_WIN1252;
     auto &settings = inkhud->persistence->settings;
     settings.userTiles.maxCount = 2;
     settings.userTiles.count = 1;
@@ -46,28 +46,28 @@ void setupNicheGraphics()
     settings.joystick.enabled = false;
     inkhud->setTouchEnabledProvider([]() { return true; });
 
-    inkhud->addApplet("All Messages", new InkHUD::AllMessageApplet, false,
+    inkhud->addApplet("Tutti i messaggi", new InkHUD::AllMessageApplet, false,
                       false); // Not Active, not autoshown
-    inkhud->addApplet("DMs", new InkHUD::DMApplet, true,
+    inkhud->addApplet("Messaggi diretti", new InkHUD::DMApplet, true,
                       true); // Activated, Autoshown
-    inkhud->addApplet("Channel 0", new InkHUD::ThreadedMessageApplet(0), true,
+    inkhud->addApplet("Canale 0", new InkHUD::ThreadedMessageApplet(0), true,
                       true); // Activated, Autoshown
-    inkhud->addApplet("Channel 1", new InkHUD::ThreadedMessageApplet(1), false,
+    inkhud->addApplet("Canale 1", new InkHUD::ThreadedMessageApplet(1), false,
                       false); // Not Active, not autoshown
-    inkhud->addApplet("Positions", new InkHUD::PositionsApplet, true,
+    inkhud->addApplet("Posizioni", new InkHUD::PositionsApplet, true,
                       false); // Activated, not autoshown
-    inkhud->addApplet("Waypoints", new InkHUD::WaypointListApplet, false,
+    inkhud->addApplet("Punti", new InkHUD::WaypointListApplet, false,
                       false); // Not Active, not autoshown
-    inkhud->addApplet("Recents List", new InkHUD::RecentsListApplet, true,
+    inkhud->addApplet("Recenti", new InkHUD::RecentsListApplet, true,
                       false); // Activated, not autoshown
-    inkhud->addApplet("Heard", new InkHUD::HeardApplet, true, false,
+    inkhud->addApplet("Nodi sentiti", new InkHUD::HeardApplet, true, false,
                       0); // Activated, not autoshown, default on tile 0
-    inkhud->addApplet("Favorites Map", new InkHUD::FavoritesMapApplet, true,
+    inkhud->addApplet("Mappa preferiti", new InkHUD::FavoritesMapApplet, true,
                       false); // Activated (heart key), not autoshown
 
     // Home screen: keep this last, its position in the list is fixed in MaxUi::A_HOME
     inkhud->addApplet("Home", new InkHUD::HomeApplet, true, false);
-    inkhud->addApplet("Controls", new InkHUD::ControlsApplet, true, false);
+    inkhud->addApplet("Controlli", new InkHUD::ControlsApplet, true, false);
     inkhud->addApplet("Radar", new InkHUD::RadarApplet, true, false);
 
     inkhud->begin();

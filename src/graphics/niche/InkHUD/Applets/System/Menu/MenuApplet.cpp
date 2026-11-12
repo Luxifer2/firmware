@@ -62,29 +62,67 @@ struct UInt32Option {
 };
 
 static constexpr DisplayTimeoutOption DISPLAY_TIMEOUT_OPTIONS[] = {
-    {0, "Forever"},      {30, "30 secs"},     {60, "1 min"},     {5 * 60, "5 min"},
-    {15 * 60, "15 min"}, {30 * 60, "30 min"}, {60 * 60, "1 hr"},
+    {0, UI_TEXT("Forever", "Sempre")},
+    {30, UI_TEXT("30 secs", "30 sec")},
+    {60, "1 min"},
+    {5 * 60, "5 min"},
+    {15 * 60, "15 min"},
+    {30 * 60, "30 min"},
+    {60 * 60, UI_TEXT("1 hr", "1 h")},
 };
 
 // Order matches meshtastic_Config_DeviceConfig_BuzzerMode
-static constexpr const char *BUZZER_MODE_LABELS[] = {"All Enabled", "All Disabled", "Notifications", "System Only", "DMs Only"};
+static constexpr const char *BUZZER_MODE_LABELS[] = {
+    UI_TEXT("All Enabled", "Tutto attivo"), UI_TEXT("All Disabled", "Tutto spento"), UI_TEXT("Notifications", "Notifiche"),
+    UI_TEXT("System Only", "Solo sistema"), UI_TEXT("DMs Only", "Solo DM")};
 
 static constexpr UInt32Option POSITION_BROADCAST_OPTIONS[] = {
-    {60, "1 min"},           {90, "90 sec"},          {5 * 60, "5 min"},       {15 * 60, "15 min"},
-    {60 * 60, "1 hr"},       {2 * 60 * 60, "2 hr"},   {3 * 60 * 60, "3 hr"},   {4 * 60 * 60, "4 hr"},
-    {5 * 60 * 60, "5 hr"},   {6 * 60 * 60, "6 hr"},   {12 * 60 * 60, "12 hr"}, {18 * 60 * 60, "18 hr"},
-    {24 * 60 * 60, "24 hr"}, {36 * 60 * 60, "36 hr"}, {48 * 60 * 60, "48 hr"}, {72 * 60 * 60, "72 hr"},
+    {60, "1 min"},
+    {90, "90 sec"},
+    {5 * 60, "5 min"},
+    {15 * 60, "15 min"},
+    {60 * 60, UI_TEXT("1 hr", "1 h")},
+    {2 * 60 * 60, UI_TEXT("2 hr", "2 h")},
+    {3 * 60 * 60, UI_TEXT("3 hr", "3 h")},
+    {4 * 60 * 60, UI_TEXT("4 hr", "4 h")},
+    {5 * 60 * 60, UI_TEXT("5 hr", "5 h")},
+    {6 * 60 * 60, UI_TEXT("6 hr", "6 h")},
+    {12 * 60 * 60, UI_TEXT("12 hr", "12 h")},
+    {18 * 60 * 60, UI_TEXT("18 hr", "18 h")},
+    {24 * 60 * 60, UI_TEXT("24 hr", "24 h")},
+    {36 * 60 * 60, UI_TEXT("36 hr", "36 h")},
+    {48 * 60 * 60, UI_TEXT("48 hr", "48 h")},
+    {72 * 60 * 60, UI_TEXT("72 hr", "72 h")},
 };
 
 static constexpr UInt32Option GPS_UPDATE_INTERVAL_OPTIONS[] = {
-    {8, "8 sec"},      {20, "20 sec"},        {40, "40 sec"},          {60, "1 min"},           {80, "80 sec"},
-    {2 * 60, "2 min"}, {5 * 60, "5 min"},     {10 * 60, "10 min"},     {15 * 60, "15 min"},     {30 * 60, "30 min"},
-    {60 * 60, "1 hr"}, {6 * 60 * 60, "6 hr"}, {12 * 60 * 60, "12 hr"}, {24 * 60 * 60, "24 hr"}, {2147483647UL, "At Boot"},
+    {8, "8 sec"},
+    {20, "20 sec"},
+    {40, "40 sec"},
+    {60, "1 min"},
+    {80, "80 sec"},
+    {2 * 60, "2 min"},
+    {5 * 60, "5 min"},
+    {10 * 60, "10 min"},
+    {15 * 60, "15 min"},
+    {30 * 60, "30 min"},
+    {60 * 60, UI_TEXT("1 hr", "1 h")},
+    {6 * 60 * 60, UI_TEXT("6 hr", "6 h")},
+    {12 * 60 * 60, UI_TEXT("12 hr", "12 h")},
+    {24 * 60 * 60, UI_TEXT("24 hr", "24 h")},
+    {2147483647UL, UI_TEXT("At Boot", "All'avvio")},
 };
 
 static constexpr UInt32Option SMART_INTERVAL_OPTIONS[] = {
-    {5 * 60, "5 min"},     {10 * 60, "10 min"},   {15 * 60, "15 min"},     {30 * 60, "30 min"},     {60 * 60, "1 hr"},
-    {2 * 60 * 60, "2 hr"}, {6 * 60 * 60, "6 hr"}, {12 * 60 * 60, "12 hr"}, {24 * 60 * 60, "24 hr"},
+    {5 * 60, "5 min"},
+    {10 * 60, "10 min"},
+    {15 * 60, "15 min"},
+    {30 * 60, "30 min"},
+    {60 * 60, UI_TEXT("1 hr", "1 h")},
+    {2 * 60 * 60, UI_TEXT("2 hr", "2 h")},
+    {6 * 60 * 60, UI_TEXT("6 hr", "6 h")},
+    {12 * 60 * 60, UI_TEXT("12 hr", "12 h")},
+    {24 * 60 * 60, UI_TEXT("24 hr", "24 h")},
 };
 
 static constexpr uint32_t SMART_DISTANCE_OPTIONS[] = {20, 50, 100, 250, 500, 1000, 2000, 5000};
@@ -96,9 +134,17 @@ struct PositionPrecisionOption {
 };
 
 static constexpr PositionPrecisionOption POSITION_PRECISION_OPTIONS[] = {
-    {32, "Precise", "Precise"}, {19, "50 m", "150 ft"},  {18, "90 m", "300 ft"},   {17, "200 m", "600 ft"},
-    {16, "350 m", "0.2 mi"},    {15, "700 m", "0.5 mi"}, {14, "1.5 km", "0.9 mi"}, {13, "2.9 km", "1.8 mi"},
-    {12, "5.8 km", "3.6 mi"},   {11, "12 km", "7.3 mi"}, {10, "23 km", "15 mi"},
+    {32, UI_TEXT("Precise", "Precisa"), UI_TEXT("Precise", "Precisa")},
+    {19, "50 m", "150 ft"},
+    {18, "90 m", "300 ft"},
+    {17, "200 m", "600 ft"},
+    {16, "350 m", "0.2 mi"},
+    {15, "700 m", "0.5 mi"},
+    {14, "1.5 km", "0.9 mi"},
+    {13, "2.9 km", "1.8 mi"},
+    {12, "5.8 km", "3.6 mi"},
+    {11, "12 km", "7.3 mi"},
+    {10, "23 km", "15 mi"},
 };
 
 static const char *getDisplayTimeoutLabel(uint32_t timeoutSeconds)
@@ -110,7 +156,7 @@ static const char *getDisplayTimeoutLabel(uint32_t timeoutSeconds)
         }
     }
 
-    return "Custom";
+    return UI_TEXT("Custom", "Altro");
 }
 
 static std::string getUInt32OptionLabel(const UInt32Option *options, uint8_t optionCount, uint32_t value,
@@ -126,10 +172,10 @@ static std::string getUInt32OptionLabel(const UInt32Option *options, uint8_t opt
         return zeroLabel ? zeroLabel : "0 sec";
     }
     if (value == 2147483647UL) {
-        return "At Boot";
+        return UI_TEXT("At Boot", "All'avvio");
     }
     if (value % (60 * 60) == 0) {
-        return std::to_string(value / (60 * 60)) + " hr";
+        return std::to_string(value / (60 * 60)) + UI_TEXT(" hr", " h");
     }
     if (value % 60 == 0) {
         return std::to_string(value / 60) + " min";
@@ -427,7 +473,7 @@ static void applyConfigReload(uint32_t changes = SEGMENT_CONFIG, bool reboot = f
 static const char *getTimezoneLabelFromValue(const char *tzdef)
 {
     if (!tzdef || !*tzdef)
-        return "Unset";
+        return UI_TEXT("Unset", "Non impostato");
 
     // Must match TIMEZONE menu entries
     if (strcmp(tzdef, "HST10") == 0)
@@ -449,11 +495,11 @@ static const char *getTimezoneLabelFromValue(const char *tzdef)
     if (strcmp(tzdef, "UTC0") == 0)
         return "UTC";
     if (strcmp(tzdef, "GMT0BST,M3.5.0/1,M10.5.0") == 0)
-        return "EU/Western";
+        return UI_TEXT("EU/Western", "Europa occidentale");
     if (strcmp(tzdef, "CET-1CEST,M3.5.0,M10.5.0/3") == 0)
-        return "EU/Central";
+        return UI_TEXT("EU/Central", "Europa centrale");
     if (strcmp(tzdef, "EET-2EEST,M3.5.0/3,M10.5.0/4") == 0)
-        return "EU/Eastern";
+        return UI_TEXT("EU/Eastern", "Europa orientale");
     if (strcmp(tzdef, "IST-5:30") == 0)
         return "Asia/Kolkata";
     if (strcmp(tzdef, "HKT-8") == 0)
@@ -1271,20 +1317,21 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         previousPage = MenuPage::EXIT;
         // Optional: next applet
         if (settings->optionalMenuItems.nextTile && settings->userTiles.count > 1 && !inkhud->hasTouchEnabledProvider())
-            items.push_back(MenuItem("Next Tile", MenuAction::NEXT_TILE, MenuPage::ROOT)); // Only if multiple applets shown
+            items.push_back(MenuItem(UI_TEXT("Next Tile", "Riquadro dopo"), MenuAction::NEXT_TILE,
+                                     MenuPage::ROOT)); // Only if multiple applets shown
 
-        items.push_back(MenuItem("Send", MenuPage::SEND));
+        items.push_back(MenuItem(UI_TEXT("Send", "Invia"), MenuPage::SEND));
 
         // Map zoom controls - only when viewing a map applet
         {
             MapApplet *mapApplet = borrowedTileOwner ? borrowedTileOwner->asMapApplet() : nullptr;
             if (mapApplet) {
                 if (mapApplet->canZoomIn())
-                    items.push_back(MenuItem("Zoom In", MenuAction::MAP_ZOOM_IN, MenuPage::EXIT));
+                    items.push_back(MenuItem(UI_TEXT("Zoom In", "Ingrandisci"), MenuAction::MAP_ZOOM_IN, MenuPage::EXIT));
                 if (mapApplet->canZoomOut())
-                    items.push_back(MenuItem("Zoom Out", MenuAction::MAP_ZOOM_OUT, MenuPage::EXIT));
+                    items.push_back(MenuItem(UI_TEXT("Zoom Out", "Rimpicciolisci"), MenuAction::MAP_ZOOM_OUT, MenuPage::EXIT));
                 if (mapApplet->isZoomLocked())
-                    items.push_back(MenuItem("Reset Zoom", MenuAction::MAP_ZOOM_RESET, MenuPage::EXIT));
+                    items.push_back(MenuItem(UI_TEXT("Reset Zoom", "Zoom normale"), MenuAction::MAP_ZOOM_RESET, MenuPage::EXIT));
             }
         }
 
@@ -1292,21 +1339,21 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         {
             WaypointListApplet *waypointListApplet = borrowedTileOwner ? borrowedTileOwner->asWaypointListApplet() : nullptr;
             if (waypointListApplet && waypointListApplet->waypointCount() > 0) {
-                items.push_back(MenuItem("Remove Waypoint", MenuPage::REMOVE_WAYPOINT_LIST));
+                items.push_back(MenuItem(UI_TEXT("Remove Waypoint", "Rimuovi punto"), MenuPage::REMOVE_WAYPOINT_LIST));
                 for (const StoredWaypoint &entry : waypointStore.getWaypoints()) {
                     if (GeofenceModule::hasGeofence(entry.waypoint)) {
-                        items.push_back(MenuItem("Geofence Alerts", MenuPage::GEOFENCE_WAYPOINT_LIST));
+                        items.push_back(MenuItem(UI_TEXT("Geofence Alerts", "Avvisi di zona"), MenuPage::GEOFENCE_WAYPOINT_LIST));
                         break;
                     }
                 }
             }
         }
 
-        items.push_back(MenuItem("Options", MenuPage::OPTIONS));
+        items.push_back(MenuItem(UI_TEXT("Options", "Opzioni"), MenuPage::OPTIONS));
         // items.push_back(MenuItem("Display Off", MenuPage::EXIT)); // TODO
-        items.push_back(MenuItem("Node Config", MenuPage::NODE_CONFIG));
-        items.push_back(MenuItem("Save & Shut Down", MenuAction::SHUTDOWN));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Node Config", "Impostazioni nodo"), MenuPage::NODE_CONFIG));
+        items.push_back(MenuItem(UI_TEXT("Save & Shut Down", "Salva e spegni"), MenuAction::SHUTDOWN));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case SEND:
@@ -1322,43 +1369,46 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
     case REMOVE_WAYPOINT_LIST:
         previousPage = MenuPage::ROOT;
         populateRemoveWaypointPage(); // must be first
-        items.insert(items.begin(), MenuItem::Header("Select to Remove"));
-        items.insert(items.begin(), MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.insert(items.begin(), MenuItem::Header(UI_TEXT("Select to Remove", "Tocca per rimuovere")));
+        items.insert(items.begin(), MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case GEOFENCE_WAYPOINT_LIST:
         previousPage = MenuPage::ROOT;
         populateGeofenceWaypointPage();
-        items.insert(items.begin(), MenuItem::Header("Select Geofence"));
-        items.insert(items.begin(), MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.insert(items.begin(), MenuItem::Header(UI_TEXT("Select Geofence", "Scegli la zona")));
+        items.insert(items.begin(), MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case GEOFENCE_OPTIONS: {
         previousPage = MenuPage::GEOFENCE_WAYPOINT_LIST;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         const StoredWaypoint *entry = waypointStore.findWaypoint(selectedGeofenceWaypointId);
         if (!entry) {
-            items.push_back(MenuItem::Header("Geofence unavailable"));
+            items.push_back(MenuItem::Header(UI_TEXT("Geofence unavailable", "Zona non disponibile")));
             break;
         }
         const std::string enterLabel =
-            std::string("Enter Alerts: ") + (entry->notificationEnabled(WAYPOINT_NOTIFY_ENTER) ? "On" : "Off");
+            std::string(UI_TEXT("Enter Alerts: ", "Avviso entrata: ")) +
+            (entry->notificationEnabled(WAYPOINT_NOTIFY_ENTER) ? UI_TEXT("On", "si") : UI_TEXT("Off", "no"));
         const std::string exitLabel =
-            std::string("Exit Alerts: ") + (entry->notificationEnabled(WAYPOINT_NOTIFY_EXIT) ? "On" : "Off");
+            std::string(UI_TEXT("Exit Alerts: ", "Avviso uscita: ")) +
+            (entry->notificationEnabled(WAYPOINT_NOTIFY_EXIT) ? UI_TEXT("On", "si") : UI_TEXT("Off", "no"));
         const std::string favoritesLabel =
-            std::string("Favorites Only: ") + (entry->notificationEnabled(WAYPOINT_NOTIFY_FAVORITES_ONLY) ? "On" : "Off");
+            std::string(UI_TEXT("Favorites Only: ", "Solo preferiti: ")) +
+            (entry->notificationEnabled(WAYPOINT_NOTIFY_FAVORITES_ONLY) ? UI_TEXT("On", "si") : UI_TEXT("Off", "no"));
         items.push_back(MenuItem(enterLabel.c_str(), MenuAction::TOGGLE_GEOFENCE_ENTER, MenuPage::GEOFENCE_OPTIONS));
         items.push_back(MenuItem(exitLabel.c_str(), MenuAction::TOGGLE_GEOFENCE_EXIT, MenuPage::GEOFENCE_OPTIONS));
         items.push_back(MenuItem(favoritesLabel.c_str(), MenuAction::TOGGLE_GEOFENCE_FAVORITES_ONLY, MenuPage::GEOFENCE_OPTIONS));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case OPTIONS:
         previousPage = MenuPage::ROOT;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         // Optional: backlight
         if (settings->optionalMenuItems.backlight) {
 #if defined(T5_S3_EPAPER_PRO)
@@ -1368,98 +1418,100 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
                 backlight = Drivers::LatchingBacklight::getInstance();
             keepBacklightOn = backlight->isLatched();
 #endif
-            items.push_back(MenuItem("Keep Backlight On", MenuAction::TOGGLE_BACKLIGHT, MenuPage::OPTIONS, &keepBacklightOn));
+            items.push_back(MenuItem(UI_TEXT("Keep Backlight On", "Luce sempre accesa"), MenuAction::TOGGLE_BACKLIGHT,
+                                     MenuPage::OPTIONS, &keepBacklightOn));
         }
 
         // Options Toggles
-        items.push_back(MenuItem("Applets", MenuPage::APPLETS));
-        items.push_back(MenuItem("Auto-show", MenuPage::AUTOSHOW));
-        items.push_back(MenuItem("Recents Duration", MenuPage::RECENTS));
+        items.push_back(MenuItem(UI_TEXT("Applets", "Schermate"), MenuPage::APPLETS));
+        items.push_back(MenuItem(UI_TEXT("Auto-show", "Apertura automatica"), MenuPage::AUTOSHOW));
+        items.push_back(MenuItem(UI_TEXT("Recents Duration", "Durata recenti"), MenuPage::RECENTS));
         if (settings->userTiles.maxCount > 1)
-            items.push_back(MenuItem("Layout", MenuAction::LAYOUT, MenuPage::OPTIONS));
-        items.push_back(MenuItem("Rotate", MenuAction::ROTATE, MenuPage::OPTIONS));
+            items.push_back(MenuItem(UI_TEXT("Layout", "Disposizione"), MenuAction::LAYOUT, MenuPage::OPTIONS));
+        items.push_back(MenuItem(UI_TEXT("Rotate", "Ruota"), MenuAction::ROTATE, MenuPage::OPTIONS));
         if (settings->joystick.enabled && !inkhud->twoWayRocker)
-            items.push_back(MenuItem("Align Joystick", MenuAction::ALIGN_JOYSTICK, MenuPage::EXIT));
-        items.push_back(MenuItem("Notifications", MenuAction::TOGGLE_NOTIFICATIONS, MenuPage::OPTIONS,
+            items.push_back(MenuItem(UI_TEXT("Align Joystick", "Allinea joystick"), MenuAction::ALIGN_JOYSTICK, MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Notifications", "Notifiche"), MenuAction::TOGGLE_NOTIFICATIONS, MenuPage::OPTIONS,
                                  &settings->optionalFeatures.notifications));
-        items.push_back(MenuItem("Battery Icon", MenuAction::TOGGLE_BATTERY_ICON, MenuPage::OPTIONS,
+        items.push_back(MenuItem(UI_TEXT("Battery Icon", "Icona batteria"), MenuAction::TOGGLE_BATTERY_ICON, MenuPage::OPTIONS,
                                  &settings->optionalFeatures.batteryIcon));
         invertedColors = (config.display.displaymode == meshtastic_Config_DisplayConfig_DisplayMode_INVERTED);
-        items.push_back(MenuItem("Invert Color", MenuAction::TOGGLE_INVERT_COLOR, MenuPage::OPTIONS, &invertedColors));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Invert Color", "Inverti colori"), MenuAction::TOGGLE_INVERT_COLOR, MenuPage::OPTIONS,
+                                 &invertedColors));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case APPLETS:
         previousPage = MenuPage::OPTIONS;
         populateAppletPage(); // must be first
-        items.insert(items.begin(), MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.insert(items.begin(), MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case AUTOSHOW:
         previousPage = MenuPage::OPTIONS;
         populateAutoshowPage(); // must be first
-        items.insert(items.begin(), MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.insert(items.begin(), MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case RECENTS:
         previousPage = MenuPage::OPTIONS;
         populateRecentsPage(); // builds only the options
-        items.insert(items.begin(), MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.insert(items.begin(), MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG:
         previousPage = MenuPage::ROOT;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         // Radio Config Section
-        items.push_back(MenuItem::Header("Radio Config"));
+        items.push_back(MenuItem::Header(UI_TEXT("Radio Config", "Radio")));
         items.push_back(MenuItem("LoRa", MenuPage::NODE_CONFIG_LORA));
-        items.push_back(MenuItem("Channel", MenuPage::NODE_CONFIG_CHANNELS));
+        items.push_back(MenuItem(UI_TEXT("Channel", "Canali"), MenuPage::NODE_CONFIG_CHANNELS));
         // Device Config Section
-        items.push_back(MenuItem::Header("Device Config"));
-        items.push_back(MenuItem("Device", MenuPage::NODE_CONFIG_DEVICE));
-        items.push_back(MenuItem("System Info", MenuPage::NODE_CONFIG_SYSTEM_INFO));
-        items.push_back(MenuItem("Position", MenuPage::NODE_CONFIG_POSITION));
+        items.push_back(MenuItem::Header(UI_TEXT("Device Config", "Dispositivo")));
+        items.push_back(MenuItem(UI_TEXT("Device", "Ruolo e fuso orario"), MenuPage::NODE_CONFIG_DEVICE));
+        items.push_back(MenuItem(UI_TEXT("System Info", "Info sistema"), MenuPage::NODE_CONFIG_SYSTEM_INFO));
+        items.push_back(MenuItem(UI_TEXT("Position", "Posizione"), MenuPage::NODE_CONFIG_POSITION));
 #ifdef INKHUD_HAS_AUDIO_OUTPUT
-        items.push_back(MenuItem("Ext. Notification", MenuPage::NODE_CONFIG_EXT_NOTIFICATION));
+        items.push_back(MenuItem(UI_TEXT("Ext. Notification", "Suoni e vibrazione"), MenuPage::NODE_CONFIG_EXT_NOTIFICATION));
 #endif
-        items.push_back(MenuItem("Power", MenuPage::NODE_CONFIG_POWER));
+        items.push_back(MenuItem(UI_TEXT("Power", "Energia"), MenuPage::NODE_CONFIG_POWER));
 #if defined(ARCH_ESP32)
-        items.push_back(MenuItem("Network", MenuPage::NODE_CONFIG_NETWORK));
+        items.push_back(MenuItem(UI_TEXT("Network", "Rete"), MenuPage::NODE_CONFIG_NETWORK));
 #endif
-        items.push_back(MenuItem("Display", MenuPage::NODE_CONFIG_DISPLAY));
+        items.push_back(MenuItem(UI_TEXT("Display", "Schermo"), MenuPage::NODE_CONFIG_DISPLAY));
         items.push_back(MenuItem("Bluetooth", MenuPage::NODE_CONFIG_BLUETOOTH));
 
         // Administration Section
-        items.push_back(MenuItem::Header("Administration"));
-        items.push_back(MenuItem("Reset NodeDB", MenuPage::NODE_CONFIG_ADMIN_RESET));
-        items.push_back(MenuItem("Wipe Messages", MenuPage::NODE_CONFIG_ADMIN_MESSAGES));
+        items.push_back(MenuItem::Header(UI_TEXT("Administration", "Amministrazione")));
+        items.push_back(MenuItem(UI_TEXT("Reset NodeDB", "Azzera elenco nodi"), MenuPage::NODE_CONFIG_ADMIN_RESET));
+        items.push_back(MenuItem(UI_TEXT("Wipe Messages", "Cancella messaggi"), MenuPage::NODE_CONFIG_ADMIN_MESSAGES));
 
         // Exit
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_DEVICE: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
         const char *role = DisplayFormatters::getDeviceRole(config.device.role);
-        nodeConfigLabels.emplace_back("Role: " + std::string(role));
+        nodeConfigLabels.emplace_back(UI_TEXT("Role: ", "Ruolo: ") + std::string(role));
         items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_DEVICE_ROLE));
 
         const char *tzLabel = getTimezoneLabelFromValue(config.device.tzdef);
-        nodeConfigLabels.emplace_back("Timezone: " + std::string(tzLabel));
+        nodeConfigLabels.emplace_back(UI_TEXT("Timezone: ", "Fuso: ") + std::string(tzLabel));
         items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::TIMEZONE));
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_SYSTEM_INFO: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
         // Read-only rows: selecting one just stays on this page
         auto addInfoRow = [&](const std::string &label) {
@@ -1467,9 +1519,9 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_SYSTEM_INFO));
         };
 
-        items.push_back(MenuItem::Header("Node Name"));
-        addInfoRow("Long: " + parse(owner.long_name));
-        addInfoRow(std::string("Short: ") + parse(owner.short_name));
+        items.push_back(MenuItem::Header(UI_TEXT("Node Name", "Nome del nodo")));
+        addInfoRow(UI_TEXT("Long: ", "Lungo: ") + parse(owner.long_name));
+        addInfoRow(std::string(UI_TEXT("Short: ", "Breve: ")) + parse(owner.short_name));
         // Last two MAC bytes, as on baseUI's LoRa screen
         uint8_t mac[6] = {0};
         getMacAddr(mac);
@@ -1478,21 +1530,21 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         addInfoRow(std::string("BLE: ") + bleId);
 
         items.push_back(MenuItem::Header("Firmware"));
-        addInfoRow(std::string("Model: ") + optstr(APP_ENV));
-        addInfoRow(std::string("Ver: ") + optstr(APP_VERSION));
+        addInfoRow(std::string(UI_TEXT("Model: ", "Modello: ")) + optstr(APP_ENV));
+        addInfoRow(std::string(UI_TEXT("Ver: ", "Versione: ")) + optstr(APP_VERSION));
 
         // Days / hours / minutes, from seconds
         auto formatDuration = [](uint32_t secs) {
             const uint32_t d = secs / 86400, h = (secs % 86400) / 3600, m = (secs % 3600) / 60;
             if (d)
-                return std::to_string(d) + "d " + std::to_string(h) + "h";
+                return std::to_string(d) + UI_TEXT("d ", "g ") + std::to_string(h) + "h";
             if (h)
                 return std::to_string(h) + "h " + std::to_string(m) + "m";
             return std::to_string(m) + "m";
         };
 
-        items.push_back(MenuItem::Header("Runtime"));
-        addInfoRow("Uptime: " + formatDuration(Time::getUptimeSecs()));
+        items.push_back(MenuItem::Header(UI_TEXT("Runtime", "Funzionamento")));
+        addInfoRow(UI_TEXT("Uptime: ", "Acceso da: ") + formatDuration(Time::getUptimeSecs()));
 
         // Memory: a label row ("Heap 89/153K 58%" or "Flash 1.2/14M 9%") with a full-width usage bar underneath, as on baseUI's
         // system screen
@@ -1512,7 +1564,7 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
             items.push_back(bar);
         };
 
-        items.push_back(MenuItem::Header("Memory"));
+        items.push_back(MenuItem::Header(UI_TEXT("Memory", "Memoria")));
         addUsageRow("Heap", memGet.getHeapSize() - memGet.getFreeHeap(), memGet.getHeapSize());
 #if defined(ARCH_ESP32) && !defined(T5_S3_EPAPER_PRO)
         if (memGet.getPsramSize() > 0)
@@ -1536,148 +1588,154 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
             addUsageRow("SD", sdUsed, sdTotal);
 #endif
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_POSITION: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
-        items.push_back(MenuItem::Header("Device GPS"));
+        items.push_back(MenuItem::Header(UI_TEXT("Device GPS", "GPS del dispositivo")));
 
 #if !MESHTASTIC_EXCLUDE_GPS && HAS_GPS
         const auto mode = config.position.gps_mode;
         if (mode == meshtastic_Config_PositionConfig_GpsMode_NOT_PRESENT) {
-            items.push_back(MenuItem("GPS None", MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_POSITION));
+            items.push_back(MenuItem(UI_TEXT("GPS None", "GPS assente"), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_POSITION));
         } else {
             gpsEnabled = (mode == meshtastic_Config_PositionConfig_GpsMode_ENABLED);
             items.push_back(MenuItem("GPS", MenuAction::TOGGLE_GPS, MenuPage::NODE_CONFIG_POSITION, &gpsEnabled));
 
             nodeConfigLabels.emplace_back(
-                "GPS Poll: " + getUInt32OptionLabel(GPS_UPDATE_INTERVAL_OPTIONS,
-                                                    sizeof(GPS_UPDATE_INTERVAL_OPTIONS) / sizeof(GPS_UPDATE_INTERVAL_OPTIONS[0]),
-                                                    config.position.gps_update_interval, "Default"));
+                UI_TEXT("GPS Poll: ", "Lettura GPS: ") +
+                getUInt32OptionLabel(GPS_UPDATE_INTERVAL_OPTIONS,
+                                     sizeof(GPS_UPDATE_INTERVAL_OPTIONS) / sizeof(GPS_UPDATE_INTERVAL_OPTIONS[0]),
+                                     config.position.gps_update_interval, UI_TEXT("Default", "Predefinito")));
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION,
                                      MenuPage::NODE_CONFIG_POSITION_GPS_UPDATE_INTERVAL));
         }
 #endif
 
-        items.push_back(MenuItem::Header("Position Packet"));
+        items.push_back(MenuItem::Header(UI_TEXT("Position Packet", "Invio della posizione")));
 
         nodeConfigLabels.emplace_back(
-            "Broadcast: " + getUInt32OptionLabel(POSITION_BROADCAST_OPTIONS,
-                                                 sizeof(POSITION_BROADCAST_OPTIONS) / sizeof(POSITION_BROADCAST_OPTIONS[0]),
-                                                 config.position.position_broadcast_secs));
+            UI_TEXT("Broadcast: ", "Invio: ") +
+            getUInt32OptionLabel(POSITION_BROADCAST_OPTIONS,
+                                 sizeof(POSITION_BROADCAST_OPTIONS) / sizeof(POSITION_BROADCAST_OPTIONS[0]),
+                                 config.position.position_broadcast_secs));
         items.push_back(
             MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_POSITION_BROADCAST_INTERVAL));
 
-        items.push_back(MenuItem("Smart Pos", MenuAction::TOGGLE_SMART_POSITION, MenuPage::NODE_CONFIG_POSITION,
-                                 &config.position.position_broadcast_smart_enabled));
+        items.push_back(MenuItem(UI_TEXT("Smart Pos", "Invio intelligente"), MenuAction::TOGGLE_SMART_POSITION,
+                                 MenuPage::NODE_CONFIG_POSITION, &config.position.position_broadcast_smart_enabled));
 
         if (config.position.position_broadcast_smart_enabled) {
-            nodeConfigLabels.emplace_back("Smart Int: " +
+            nodeConfigLabels.emplace_back(UI_TEXT("Smart Int: ", "Intervallo min.: ") +
                                           getUInt32OptionLabel(SMART_INTERVAL_OPTIONS,
                                                                sizeof(SMART_INTERVAL_OPTIONS) / sizeof(SMART_INTERVAL_OPTIONS[0]),
                                                                config.position.broadcast_smart_minimum_interval_secs));
             items.push_back(
                 MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_POSITION_SMART_INTERVAL));
 
-            nodeConfigLabels.emplace_back("Smart Dist: " + localizeDistance(config.position.broadcast_smart_minimum_distance));
+            nodeConfigLabels.emplace_back(UI_TEXT("Smart Dist: ", "Distanza min.: ") +
+                                          localizeDistance(config.position.broadcast_smart_minimum_distance));
             items.push_back(
                 MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_POSITION_SMART_DISTANCE));
         }
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_POSITION_BROADCAST_INTERVAL:
         previousPage = MenuPage::NODE_CONFIG_POSITION;
-        items.push_back(MenuItem("Back", previousPage));
-        items.push_back(MenuItem::Header("Max time between sends"));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem::Header(UI_TEXT("Max time between sends", "Tempo massimo tra invii")));
         for (const auto &option : POSITION_BROADCAST_OPTIONS) {
             nodeConfigLabels.emplace_back(option.label);
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::SET_POSITION_BROADCAST_INTERVAL,
                                      MenuPage::NODE_CONFIG_POSITION));
         }
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_POSITION_SMART_INTERVAL:
         previousPage = MenuPage::NODE_CONFIG_POSITION;
-        items.push_back(MenuItem("Back", previousPage));
-        items.push_back(MenuItem::Header("Fastest smart resend"));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem::Header(UI_TEXT("Fastest smart resend", "Tempo minimo tra invii")));
         for (const auto &option : SMART_INTERVAL_OPTIONS) {
             nodeConfigLabels.emplace_back(option.label);
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::SET_SMART_BROADCAST_INTERVAL,
                                      MenuPage::NODE_CONFIG_POSITION));
         }
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_POSITION_SMART_DISTANCE:
         previousPage = MenuPage::NODE_CONFIG_POSITION;
-        items.push_back(MenuItem("Back", previousPage));
-        items.push_back(MenuItem::Header("Move this far to send"));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem::Header(UI_TEXT("Move this far to send", "Invia dopo questa distanza")));
         for (const auto &option : SMART_DISTANCE_OPTIONS) {
             nodeConfigLabels.emplace_back(localizeDistance(option));
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::SET_SMART_BROADCAST_DISTANCE,
                                      MenuPage::NODE_CONFIG_POSITION));
         }
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_POSITION_GPS_UPDATE_INTERVAL:
         previousPage = MenuPage::NODE_CONFIG_POSITION;
-        items.push_back(MenuItem("Back", previousPage));
-        items.push_back(MenuItem::Header("GPS poll cadence"));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem::Header(UI_TEXT("GPS poll cadence", "Ogni quanto legge il GPS")));
         for (const auto &option : GPS_UPDATE_INTERVAL_OPTIONS) {
             nodeConfigLabels.emplace_back(option.label);
             items.push_back(
                 MenuItem(nodeConfigLabels.back().c_str(), MenuAction::SET_GPS_UPDATE_INTERVAL, MenuPage::NODE_CONFIG_POSITION));
         }
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
 #ifdef INKHUD_HAS_AUDIO_OUTPUT
     case NODE_CONFIG_EXT_NOTIFICATION: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
-        items.push_back(MenuItem("Enabled", MenuAction::TOGGLE_EXT_NOTIFICATION, MenuPage::EXIT,
+        items.push_back(MenuItem(UI_TEXT("Enabled", "Attivo"), MenuAction::TOGGLE_EXT_NOTIFICATION, MenuPage::EXIT,
                                  &moduleConfig.external_notification.enabled));
 
-        items.push_back(MenuItem::Header("Buzzer"));
+        items.push_back(MenuItem::Header(UI_TEXT("Buzzer", "Cicalino")));
 
         const uint8_t mode = config.device.buzzer_mode;
-        nodeConfigLabels.emplace_back(std::string("Mode: ") + (mode < BUZZER_MODE_COUNT ? BUZZER_MODE_LABELS[mode] : "Custom"));
+        nodeConfigLabels.emplace_back(std::string(UI_TEXT("Mode: ", "Modo: ")) + (mode < BUZZER_MODE_COUNT
+                                                                                      ? BUZZER_MODE_LABELS[mode]
+                                                                                      : UI_TEXT("Custom", "Personalizzato")));
         items.push_back(
             MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_EXT_NOTIFICATION_BUZZER_MODE));
 
-        items.push_back(MenuItem("Alert Message", MenuAction::TOGGLE_EXT_NOTIFICATION_MESSAGE_BUZZER,
+        items.push_back(MenuItem(UI_TEXT("Alert Message", "Suono messaggi"), MenuAction::TOGGLE_EXT_NOTIFICATION_MESSAGE_BUZZER,
                                  MenuPage::NODE_CONFIG_EXT_NOTIFICATION,
                                  &moduleConfig.external_notification.alert_message_buzzer));
-        items.push_back(MenuItem("Alert Bell", MenuAction::TOGGLE_EXT_NOTIFICATION_BELL_BUZZER,
+        items.push_back(MenuItem(UI_TEXT("Alert Bell", "Suono campanella"), MenuAction::TOGGLE_EXT_NOTIFICATION_BELL_BUZZER,
                                  MenuPage::NODE_CONFIG_EXT_NOTIFICATION, &moduleConfig.external_notification.alert_bell_buzzer));
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_EXT_NOTIFICATION_BUZZER_MODE:
         previousPage = MenuPage::NODE_CONFIG_EXT_NOTIFICATION;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         populateBuzzerModePage();
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 #endif
 
     case NODE_CONFIG_POWER: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 #if defined(ARCH_ESP32)
-        items.push_back(MenuItem("Powersave", MenuAction::TOGGLE_POWER_SAVE, MenuPage::EXIT, &config.power.is_power_saving));
+        items.push_back(MenuItem(UI_TEXT("Powersave", "Risparmio energia"), MenuAction::TOGGLE_POWER_SAVE, MenuPage::EXIT,
+                                 &config.power.is_power_saving));
 #endif
         // ADC Multiplier
         float effectiveMult = 0.0f;
@@ -1696,36 +1754,38 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         // Only show if we actually have a value
         if (effectiveMult > 0.0f) {
             char buf[32];
-            snprintf(buf, sizeof(buf), "ADC Mult: %.3f", effectiveMult);
+            snprintf(buf, sizeof(buf), UI_TEXT("ADC Mult: %.3f", "Molt. ADC: %.3f"), effectiveMult);
             nodeConfigLabels.emplace_back(buf);
 
             items.push_back(
                 MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_POWER_ADC_CAL));
         }
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_POWER_ADC_CAL: {
         previousPage = MenuPage::NODE_CONFIG_POWER;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
         // Instruction text (header-style, non-selectable)
-        items.push_back(MenuItem::Header("Run on full charge Only"));
+        items.push_back(MenuItem::Header(UI_TEXT("Run on full charge Only", "Solo a batteria carica")));
 
         // Action
-        items.push_back(MenuItem("Calibrate ADC", MenuAction::CALIBRATE_ADC, MenuPage::NODE_CONFIG_POWER));
+        items.push_back(
+            MenuItem(UI_TEXT("Calibrate ADC", "Calibra ADC"), MenuAction::CALIBRATE_ADC, MenuPage::NODE_CONFIG_POWER));
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_NETWORK: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
-        const char *wifiLabel = config.network.wifi_enabled ? "WiFi: On" : "WiFi: Off";
+        const char *wifiLabel =
+            config.network.wifi_enabled ? UI_TEXT("WiFi: On", "WiFi: acceso") : UI_TEXT("WiFi: Off", "WiFi: spento");
 
         items.push_back(MenuItem(wifiLabel, MenuAction::TOGGLE_WIFI, MenuPage::EXIT));
 
@@ -1734,9 +1794,9 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
 
             // Status
             if (WiFi.status() == WL_CONNECTED) {
-                nodeConfigLabels.emplace_back("Status: Connected");
+                nodeConfigLabels.emplace_back(UI_TEXT("Status: Connected", "Stato: connesso"));
             } else {
-                nodeConfigLabels.emplace_back("Status: Not Connected");
+                nodeConfigLabels.emplace_back(UI_TEXT("Status: Not Connected", "Stato: non connesso"));
             }
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_NETWORK));
 
@@ -1746,7 +1806,7 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
                 int quality = constrain(2 * (rssi + 100), 0, 100);
 
                 char sigBuf[32];
-                snprintf(sigBuf, sizeof(sigBuf), "Signal: %d%%", quality);
+                snprintf(sigBuf, sizeof(sigBuf), UI_TEXT("Signal: %d%%", "Segnale: %d%%"), quality);
                 nodeConfigLabels.emplace_back(sigBuf);
                 items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_NETWORK));
 
@@ -1775,56 +1835,60 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         }
 #endif
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_DISPLAY: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
-        items.push_back(MenuItem("12-Hour Clock", MenuAction::TOGGLE_12H_CLOCK, MenuPage::NODE_CONFIG_DISPLAY,
-                                 &config.display.use_12h_clock));
+        items.push_back(MenuItem(UI_TEXT("12-Hour Clock", "Orologio 12 ore"), MenuAction::TOGGLE_12H_CLOCK,
+                                 MenuPage::NODE_CONFIG_DISPLAY, &config.display.use_12h_clock));
 
-        nodeConfigLabels.emplace_back("Screen Timeout: " + std::string(getDisplayTimeoutLabel(config.display.screen_on_secs)));
+        nodeConfigLabels.emplace_back(UI_TEXT("Screen Timeout: ", "Spegni schermo: ") +
+                                      std::string(getDisplayTimeoutLabel(config.display.screen_on_secs)));
         items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_DISPLAY_TIMEOUT));
 
-        const char *unitsLabel =
-            (config.display.units == meshtastic_Config_DisplayConfig_DisplayUnits_IMPERIAL) ? "Units: Imperial" : "Units: Metric";
+        const char *unitsLabel = (config.display.units == meshtastic_Config_DisplayConfig_DisplayUnits_IMPERIAL)
+                                     ? UI_TEXT("Units: Imperial", "Misure: imperiali")
+                                     : UI_TEXT("Units: Metric", "Misure: metriche");
 
         items.push_back(MenuItem(unitsLabel, MenuAction::TOGGLE_DISPLAY_UNITS, MenuPage::NODE_CONFIG_DISPLAY));
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_DISPLAY_TIMEOUT:
         previousPage = MenuPage::NODE_CONFIG_DISPLAY;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         populateDisplayTimeoutPage();
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_BLUETOOTH: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
-        const char *btLabel = config.bluetooth.enabled ? "Bluetooth: On" : "Bluetooth: Off";
+        const char *btLabel = config.bluetooth.enabled ? UI_TEXT("Bluetooth: On", "Bluetooth: acceso")
+                                                       : UI_TEXT("Bluetooth: Off", "Bluetooth: spento");
         items.push_back(MenuItem(btLabel, MenuAction::TOGGLE_BLUETOOTH, MenuPage::EXIT));
 
-        const char *pairLabel = config.bluetooth.fixed_pin ? "Pair Mode: Fixed" : "Pair Mode: Random";
+        const char *pairLabel =
+            config.bluetooth.fixed_pin ? UI_TEXT("Pair Mode: Fixed", "PIN: fisso") : UI_TEXT("Pair Mode: Random", "PIN: casuale");
         items.push_back(MenuItem(pairLabel, MenuAction::TOGGLE_BLUETOOTH_PAIR_MODE, MenuPage::NODE_CONFIG_BLUETOOTH));
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_LORA: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
-        const char *region = myRegion ? myRegion->name : "Unset";
-        nodeConfigLabels.emplace_back("Region: " + std::string(region));
+        const char *region = myRegion ? myRegion->name : UI_TEXT("Unset", "Non impostato");
+        nodeConfigLabels.emplace_back(UI_TEXT("Region: ", "Regione: ") + std::string(region));
         items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::REGION));
 
         const char *preset =
@@ -1834,17 +1898,17 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
 
         char freqBuf[32];
         float freq = RadioLibInterface::instance->getFreq();
-        snprintf(freqBuf, sizeof(freqBuf), "Freq: %.3f MHz", freq);
+        snprintf(freqBuf, sizeof(freqBuf), UI_TEXT("Freq: %.3f MHz", "Freq.: %.3f MHz"), freq);
         nodeConfigLabels.emplace_back(freqBuf);
         items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_LORA));
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_CHANNELS: {
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
         for (uint8_t i = 0; i < MAX_NUM_CHANNELS; i++) {
             const meshtastic_Channel &ch = channels.getByIndex(i);
@@ -1858,11 +1922,11 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
             std::string label = "#";
 
             if (ch.role == meshtastic_Channel_Role_PRIMARY) {
-                label += "Primary";
+                label += UI_TEXT("Primary", "Principale");
             } else if (strlen(ch.settings.name) > 0) {
                 label += parse(ch.settings.name);
             } else {
-                label += "Channel" + to_string(i + 1);
+                label += UI_TEXT("Channel", "Canale ") + to_string(i + 1);
             }
 
             nodeConfigLabels.push_back(label);
@@ -1870,19 +1934,19 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
                 MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_CHANNEL_DETAIL));
         }
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_CHANNEL_DETAIL: {
         previousPage = MenuPage::NODE_CONFIG_CHANNELS;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
 
         meshtastic_Channel &ch = channels.getByIndex(selectedChannelIndex);
 
         // Name (read-only)
-        const char *name = strlen(ch.settings.name) > 0 ? ch.settings.name : "Unnamed";
-        nodeConfigLabels.emplace_back("Ch: " + parse(name));
+        const char *name = strlen(ch.settings.name) > 0 ? ch.settings.name : UI_TEXT("Unnamed", "Senza nome");
+        nodeConfigLabels.emplace_back(UI_TEXT("Ch: ", "Canale: ") + parse(name));
         items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_CHANNEL_DETAIL));
 
         // Uplink
@@ -1895,13 +1959,13 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         // Position
         channelPositionEnabled = ch.settings.has_module_settings && ch.settings.module_settings.position_precision > 0;
 
-        items.push_back(MenuItem("Position", MenuAction::TOGGLE_CHANNEL_POSITION, MenuPage::NODE_CONFIG_CHANNEL_DETAIL,
-                                 &channelPositionEnabled));
+        items.push_back(MenuItem(UI_TEXT("Position", "Posizione"), MenuAction::TOGGLE_CHANNEL_POSITION,
+                                 MenuPage::NODE_CONFIG_CHANNEL_DETAIL, &channelPositionEnabled));
 
         // Precision
         if (channelPositionEnabled) {
 
-            std::string precisionLabel = "Unknown";
+            std::string precisionLabel = UI_TEXT("Unknown", "Sconosciuta");
 
             for (const auto &opt : POSITION_PRECISION_OPTIONS) {
                 if (opt.value == ch.settings.module_settings.position_precision) {
@@ -1911,21 +1975,21 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
                     break;
                 }
             }
-            nodeConfigLabels.emplace_back("Precision: " + precisionLabel);
+            nodeConfigLabels.emplace_back(UI_TEXT("Precision: ", "Precisione: ") + precisionLabel);
             items.push_back(
                 MenuItem(nodeConfigLabels.back().c_str(), MenuAction::NO_ACTION, MenuPage::NODE_CONFIG_CHANNEL_PRECISION));
         }
 
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_CHANNEL_PRECISION: {
         previousPage = MenuPage::NODE_CONFIG_CHANNEL_DETAIL;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         const meshtastic_Channel &ch = channels.getByIndex(selectedChannelIndex);
         if (!ch.settings.has_module_settings || ch.settings.module_settings.position_precision == 0) {
-            items.push_back(MenuItem("Position is Off", MenuPage::NODE_CONFIG_CHANNEL_DETAIL));
+            items.push_back(MenuItem(UI_TEXT("Position is Off", "Posizione spenta"), MenuPage::NODE_CONFIG_CHANNEL_DETAIL));
             break;
         }
         constexpr uint8_t optionCount = sizeof(POSITION_PRECISION_OPTIONS) / sizeof(POSITION_PRECISION_OPTIONS[0]);
@@ -1938,24 +2002,24 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
             items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::SET_CHANNEL_PRECISION,
                                      MenuPage::NODE_CONFIG_CHANNEL_DETAIL));
         }
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case NODE_CONFIG_DEVICE_ROLE: {
         previousPage = MenuPage::NODE_CONFIG_DEVICE;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         items.push_back(MenuItem("Client", MenuAction::SET_ROLE_CLIENT, MenuPage::EXIT));
         items.push_back(MenuItem("Client Mute", MenuAction::SET_ROLE_CLIENT_MUTE, MenuPage::EXIT));
         items.push_back(MenuItem("Router", MenuAction::SET_ROLE_ROUTER, MenuPage::EXIT));
         items.push_back(MenuItem("Repeater", MenuAction::SET_ROLE_REPEATER, MenuPage::EXIT));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
 
     case TIMEZONE:
         previousPage = MenuPage::NODE_CONFIG_DEVICE;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         items.push_back(MenuItem("US/Hawaii", SET_TZ_US_HAWAII, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("US/Alaska", SET_TZ_US_ALASKA, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("US/Pacific", SET_TZ_US_PACIFIC, MenuPage::NODE_CONFIG_DEVICE));
@@ -1965,20 +2029,20 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         items.push_back(MenuItem("US/Eastern", SET_TZ_US_EASTERN, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("BR/Brasilia", SET_TZ_BR_BRAZILIA, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("UTC", SET_TZ_UTC, MenuPage::NODE_CONFIG_DEVICE));
-        items.push_back(MenuItem("EU/Western", SET_TZ_EU_WESTERN, MenuPage::NODE_CONFIG_DEVICE));
-        items.push_back(MenuItem("EU/Central", SET_TZ_EU_CENTRAL, MenuPage::NODE_CONFIG_DEVICE));
-        items.push_back(MenuItem("EU/Eastern", SET_TZ_EU_EASTERN, MenuPage::NODE_CONFIG_DEVICE));
+        items.push_back(MenuItem(UI_TEXT("EU/Western", "Europa occidentale"), SET_TZ_EU_WESTERN, MenuPage::NODE_CONFIG_DEVICE));
+        items.push_back(MenuItem(UI_TEXT("EU/Central", "Europa centrale"), SET_TZ_EU_CENTRAL, MenuPage::NODE_CONFIG_DEVICE));
+        items.push_back(MenuItem(UI_TEXT("EU/Eastern", "Europa orientale"), SET_TZ_EU_EASTERN, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("Asia/Kolkata", SET_TZ_ASIA_KOLKATA, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("Asia/Hong Kong", SET_TZ_ASIA_HONG_KONG, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("AU/AWST", SET_TZ_AU_AWST, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("AU/ACST", SET_TZ_AU_ACST, MenuPage::NODE_CONFIG_DEVICE));
         items.push_back(MenuItem("AU/AEST", SET_TZ_AU_AEST, MenuPage::NODE_CONFIG_DEVICE));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case REGION:
         previousPage = MenuPage::NODE_CONFIG_LORA;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         items.push_back(MenuItem("US", MenuAction::SET_REGION_US, MenuPage::EXIT));
         items.push_back(MenuItem("EU 868", MenuAction::SET_REGION_EU_868, MenuPage::EXIT));
         items.push_back(MenuItem("EU 433", MenuAction::SET_REGION_EU_433, MenuPage::EXIT));
@@ -2010,12 +2074,12 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
         items.push_back(MenuItem("ITU2_2M (144-148)", MenuAction::SET_REGION_ITU2_2M, MenuPage::EXIT));
         items.push_back(MenuItem("ITU3_2M (144-148)", MenuAction::SET_REGION_ITU3_2M, MenuPage::EXIT));
         items.push_back(MenuItem("ITU2_125CM (220-225)", MenuAction::SET_REGION_ITU2_125CM, MenuPage::EXIT));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_PRESET: {
         previousPage = MenuPage::NODE_CONFIG_LORA;
-        items.push_back(MenuItem("Back", previousPage));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
         regionPresetCount = 0;
         if (myRegion && myRegion->profile) {
             const meshtastic_Config_LoRaConfig_ModemPreset *presets = myRegion->getAvailablePresets();
@@ -2027,23 +2091,25 @@ void InkHUD::MenuApplet::showPage(MenuPage page)
                 items.push_back(MenuItem(nodeConfigLabels.back().c_str(), MenuAction::SET_PRESET_FROM_REGION, MenuPage::EXIT));
             }
         }
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
     }
     // Administration Section
     case NODE_CONFIG_ADMIN_RESET:
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Reset All", MenuAction::RESET_NODEDB_ALL, MenuPage::EXIT));
-        items.push_back(MenuItem("Keep Favorites Only", MenuAction::RESET_NODEDB_KEEP_FAVORITES, MenuPage::EXIT));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(MenuItem(UI_TEXT("Reset All", "Azzera tutto"), MenuAction::RESET_NODEDB_ALL, MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Keep Favorites Only", "Tieni solo i preferiti"),
+                                 MenuAction::RESET_NODEDB_KEEP_FAVORITES, MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     case NODE_CONFIG_ADMIN_MESSAGES:
         previousPage = MenuPage::NODE_CONFIG;
-        items.push_back(MenuItem("Back", previousPage));
-        items.push_back(MenuItem("Wipe All Messages", MenuAction::WIPE_MESSAGES_ALL, MenuPage::EXIT));
-        items.push_back(MenuItem("Exit", MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Back", "Indietro"), previousPage));
+        items.push_back(
+            MenuItem(UI_TEXT("Wipe All Messages", "Cancella tutti i messaggi"), MenuAction::WIPE_MESSAGES_ALL, MenuPage::EXIT));
+        items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
         break;
 
     // Exit
@@ -2603,7 +2669,7 @@ void InkHUD::MenuApplet::populateRecentsPage()
     // Create an entry for each item in RECENTS_OPTIONS_MINUTES array
     // (Defined at top of this file)
     for (uint8_t i = 0; i < optionCount; i++) {
-        std::string label = to_string(RECENTS_OPTIONS_MINUTES[i]) + " mins";
+        std::string label = to_string(RECENTS_OPTIONS_MINUTES[i]) + UI_TEXT(" mins", " min");
         recentsSelected[i] = (settings->recentlyActiveSeconds == RECENTS_OPTIONS_MINUTES[i] * 60);
         items.push_back(MenuItem(label.c_str(), MenuAction::SET_RECENTS, MenuPage::OPTIONS, &recentsSelected[i]));
     }
@@ -2648,7 +2714,7 @@ void InkHUD::MenuApplet::populateSendPage()
 #ifdef T_DECK_MAX
         items.push_back(MenuItem("Scrivi con la tastiera", MenuAction::FREE_TEXT, MenuPage::SEND));
 #else
-        items.push_back(MenuItem("Free Text", MenuAction::FREE_TEXT, MenuPage::SEND));
+        items.push_back(MenuItem(UI_TEXT("Free Text", "Testo libero"), MenuAction::FREE_TEXT, MenuPage::SEND));
 #endif
 
     // One menu item for each canned message
@@ -2667,7 +2733,7 @@ void InkHUD::MenuApplet::populateSendPage()
         items.push_back(MenuItem(itemText, MenuAction::STORE_CANNEDMESSAGE_SELECTION, MenuPage::CANNEDMESSAGE_RECIPIENT));
     }
 
-    items.push_back(MenuItem("Exit", MenuPage::EXIT));
+    items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
 }
 
 // Dynamically create MenuItem entries for possible canned message destinations
@@ -2692,7 +2758,7 @@ void InkHUD::MenuApplet::populateRecipientPage()
         // Set a label for the menu item
         r.label = "Ch " + to_string(i) + ": ";
         if (channel.role == meshtastic_Channel_Role_PRIMARY)
-            r.label += "Primary";
+            r.label += UI_TEXT("Primary", "Principale");
         else
             r.label += parse(channel.settings.name);
 
@@ -2747,7 +2813,7 @@ void InkHUD::MenuApplet::populateRecipientPage()
         }
     }
 
-    items.push_back(MenuItem("Exit", MenuPage::EXIT));
+    items.push_back(MenuItem(UI_TEXT("Exit", "Esci"), MenuPage::EXIT));
 }
 
 // Dynamically create MenuItem entries for each waypoint in the active WaypointListApplet
@@ -2885,7 +2951,7 @@ void InkHUD::MenuApplet::drawSystemInfoPanel(int16_t left, int16_t top, uint16_t
     float voltage = powerStatus->getBatteryVoltageMv() / 1000.0;
     char voltageStr[8]; // e.g. "4.12"
     snprintf(voltageStr, sizeof(voltageStr), "%.2f", voltage);
-    printAt(colC[0], labelT, "Bat V", CENTER, TOP);
+    printAt(colC[0], labelT, UI_TEXT("Bat V", "Batt. V"), CENTER, TOP);
     printAt(colC[0], valT, voltageStr, CENTER, TOP);
 
     // Divider

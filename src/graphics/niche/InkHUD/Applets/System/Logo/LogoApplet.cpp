@@ -167,7 +167,7 @@ void InkHUD::LogoApplet::onShutdown()
 
     textLeft = "";
     textRight = "";
-    textTitle = "Shutting Down...";
+    textTitle = UI_TEXT("Shutting Down...", "Spegnimento...");
     fontTitle = fontSmall;
 
     // Draw a shutting down screen, twice.
@@ -201,7 +201,7 @@ void InkHUD::LogoApplet::onApplyingChanges()
 
     textLeft = "";
     textRight = "";
-    textTitle = "Applying changes";
+    textTitle = UI_TEXT("Applying changes", "Applico le modifiche");
     fontTitle = fontSmall;
 
     inkhud->forceUpdate(Drivers::EInk::FAST, false);
@@ -213,7 +213,7 @@ void InkHUD::LogoApplet::onReboot()
 
     textLeft = "";
     textRight = "";
-    textTitle = "Rebooting...";
+    textTitle = UI_TEXT("Rebooting...", "Riavvio...");
     fontTitle = fontSmall;
 
     inkhud->forceUpdate(Drivers::EInk::FULL, true, false);

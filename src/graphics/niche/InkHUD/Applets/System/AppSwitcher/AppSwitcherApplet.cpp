@@ -197,21 +197,22 @@ std::string lowercase(const char *name)
 IconKind iconKindForAppletName(const char *name)
 {
     const std::string lower = lowercase(name);
-    if (lower.find("all message") != std::string::npos || lower.find("messages") != std::string::npos)
+    if (lower.find("all message") != std::string::npos || lower.find("messages") != std::string::npos ||
+        lower.find("tutti i messaggi") != std::string::npos)
         return IconKind::ALL_MESSAGES;
-    if (lower.find("dm") != std::string::npos)
+    if (lower.find("dm") != std::string::npos || lower.find("diretti") != std::string::npos)
         return IconKind::DMS;
-    if (lower.find("channel") != std::string::npos)
+    if (lower.find("channel") != std::string::npos || lower.find("canale") != std::string::npos)
         return IconKind::CHANNEL;
-    if (lower.find("position") != std::string::npos)
+    if (lower.find("position") != std::string::npos || lower.find("posizioni") != std::string::npos)
         return IconKind::POSITIONS;
-    if (lower.find("waypoint") != std::string::npos)
+    if (lower.find("waypoint") != std::string::npos || lower.find("punti") != std::string::npos)
         return IconKind::POSITIONS;
     if (lower.find("recent") != std::string::npos)
         return IconKind::RECENTS;
-    if (lower.find("heard") != std::string::npos)
+    if (lower.find("heard") != std::string::npos || lower.find("sentiti") != std::string::npos)
         return IconKind::HEARD;
-    if (lower.find("favorite") != std::string::npos)
+    if (lower.find("favorite") != std::string::npos || lower.find("preferiti") != std::string::npos)
         return IconKind::FAVORITES;
     return IconKind::GENERIC;
 }
@@ -382,7 +383,7 @@ void InkHUD::AppSwitcherApplet::onRender(bool full)
 
     if (activeAppletIndices.empty()) {
         setFont(fontSmall);
-        printAt(width() / 2, height() / 2, "No Available Applets", CENTER, MIDDLE);
+        printAt(width() / 2, height() / 2, UI_TEXT("No Available Applets", "Nessuna schermata"), CENTER, MIDDLE);
         return;
     }
 

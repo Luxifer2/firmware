@@ -621,10 +621,10 @@ std::string InkHUD::Applet::getTimeString(uint32_t epochSeconds)
         return "";
 
     if (daysAgo > 1)
-        return to_string(daysAgo) + " days ago";
+        return to_string(daysAgo) + UI_TEXT(" days ago", " giorni fa");
 
     else if (hoursAgo > 18)
-        return "Yesterday";
+        return UI_TEXT("Yesterday", "Ieri");
 
     else {
 

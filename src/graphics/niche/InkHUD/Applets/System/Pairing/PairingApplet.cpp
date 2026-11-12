@@ -15,7 +15,7 @@ void InkHUD::PairingApplet::onRender(bool full)
     setFont(fontMedium);
     printAt(X(0.5), Y(0.25), "Bluetooth", CENTER, BOTTOM);
     setFont(fontSmall);
-    printAt(X(0.5), Y(0.25), "Enter this code", CENTER, TOP);
+    printAt(X(0.5), Y(0.25), UI_TEXT("Enter this code", "Inserisci questo codice"), CENTER, TOP);
 
     // Passkey
     setFont(fontMedium);
@@ -23,7 +23,7 @@ void InkHUD::PairingApplet::onRender(bool full)
 
     // Device's bluetooth name, if it will fit
     setFont(fontSmall);
-    std::string name = "Name: " + parse(getDeviceName());
+    std::string name = UI_TEXT("Name: ", "Nome: ") + parse(getDeviceName());
     if (getTextWidth(name) > width()) // Too wide, try without the leading "Name: "
         name = parse(getDeviceName());
     if (getTextWidth(name) < width()) // Does it fit?

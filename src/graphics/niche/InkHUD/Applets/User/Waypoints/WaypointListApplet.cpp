@@ -230,14 +230,14 @@ std::string InkHUD::WaypointListApplet::headerText()
 {
     const auto &waypoints = waypointStore.getWaypoints();
     if (waypoints.empty())
-        return "Waypoints";
+        return UI_TEXT("Waypoints", "Punti");
 
     const uint8_t rows = visibleRows(scrollOffset);
     const uint8_t first = scrollOffset + 1;
     const uint8_t last = std::min<uint8_t>((uint8_t)waypoints.size(), scrollOffset + rows);
 
     char buf[32];
-    snprintf(buf, sizeof(buf), "Waypoints %u-%u/%u", first, last, (unsigned)waypoints.size());
+    snprintf(buf, sizeof(buf), UI_TEXT("Waypoints %u-%u/%u", "Punti %u-%u/%u"), first, last, (unsigned)waypoints.size());
     return buf;
 }
 
@@ -247,7 +247,7 @@ std::string InkHUD::WaypointListApplet::waypointName(const meshtastic_Waypoint &
         return parse(waypoint.name);
 
     char buf[20];
-    snprintf(buf, sizeof(buf), "Waypoint 0x%x", (unsigned)waypoint.id);
+    snprintf(buf, sizeof(buf), UI_TEXT("Waypoint 0x%x", "Punto 0x%x"), (unsigned)waypoint.id);
     return buf;
 }
 
@@ -305,7 +305,7 @@ std::string InkHUD::WaypointListApplet::expireText(uint32_t expireEpoch)
     if (now == 0)
         return "";
     if (expireEpoch <= now)
-        return "exp";
+        return UI_TEXT("exp", "scad");
 
     const uint32_t left = expireEpoch - now;
     char buf[12];
@@ -478,7 +478,7 @@ void InkHUD::WaypointListApplet::onRender(bool full)
 
     if (waypoints.empty()) {
         setFont(fontMedium);
-        printAt(X(0.5f), Y(0.5f), "No Waypoints", CENTER, MIDDLE);
+        printAt(X(0.5f), Y(0.5f), UI_TEXT("No Waypoints", "Nessun punto"), CENTER, MIDDLE);
         return;
     }
 

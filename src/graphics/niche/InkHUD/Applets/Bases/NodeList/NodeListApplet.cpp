@@ -223,7 +223,8 @@ void InkHUD::NodeListApplet::onRender(bool full)
             rightContentW = std::max(rightContentW, signalW);
             drawSignalIndicator(signalX, signalY, signalW, signalH, signal);
         } else if (hopsAway != CardInfo::HOPS_UNKNOWN) {
-            std::string hopString = to_string(hopsAway) + (hopsAway == 1 ? " Hop" : " Hops");
+            std::string hopString =
+                to_string(hopsAway) + (hopsAway == 1 ? UI_TEXT(" Hop", " salto") : UI_TEXT(" Hops", " salti"));
             rightContentW = std::max(rightContentW, getTextWidth(hopString));
             printAt(width() - 1, lineAY, hopString, RIGHT, MIDDLE);
         }

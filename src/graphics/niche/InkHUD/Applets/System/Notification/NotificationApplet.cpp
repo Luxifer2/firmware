@@ -295,7 +295,7 @@ std::string InkHUD::NotificationApplet::getNotificationText(uint16_t widthAvaila
         meshtastic_NodeInfoLite *node = nodeDB->getMeshNode(message->sender);
 
         // Leading tag (channel vs. DM)
-        text += msgIsBroadcast ? "From:" : "DM: ";
+        text += msgIsBroadcast ? UI_TEXT("From:", "Da:") : "DM: ";
 
         // Sender id
         if (nodeInfoLiteHasUser(node))
@@ -309,7 +309,7 @@ std::string InkHUD::NotificationApplet::getNotificationText(uint16_t widthAvaila
             text.clear();
 
             // Leading tag (channel vs. DM)
-            text += msgIsBroadcast ? "Msg from " : "DM from ";
+            text += msgIsBroadcast ? UI_TEXT("Msg from ", "Messaggio da ") : UI_TEXT("DM from ", "DM da ");
 
             // Sender id
             if (nodeInfoLiteHasUser(node))
@@ -324,7 +324,7 @@ std::string InkHUD::NotificationApplet::getNotificationText(uint16_t widthAvaila
 
     else if (currentNotification.type == Notification::Type::NOTIFICATION_GEOFENCE) {
         text += currentNotification.geofenceNodeName;
-        text += currentNotification.geofenceEntered ? " IN " : " OUT ";
+        text += currentNotification.geofenceEntered ? UI_TEXT(" IN ", " DENTRO ") : UI_TEXT(" OUT ", " FUORI ");
         text += currentNotification.geofenceName;
     }
 
