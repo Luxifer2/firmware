@@ -171,7 +171,7 @@ class NodeHunter : public concurrency::OSThread
 
         char myLat[16] = "", myLon[16] = "", itsLat[16] = "", itsLon[16] = "", dist[12] = "";
         int32_t la, lo;
-        const bool mine = maxOwnPosition(la, lo);
+        const bool mine = InkHUD::maxOwnPosition(la, lo);
         if (mine) {
             formatDegrees(myLat, sizeof(myLat), la);
             formatDegrees(myLon, sizeof(myLon), lo);
