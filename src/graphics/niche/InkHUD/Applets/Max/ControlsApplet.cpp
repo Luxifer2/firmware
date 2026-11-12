@@ -52,24 +52,8 @@ void InkHUD::ControlsApplet::onRender(bool full)
     cs.wifi = config.network.wifi_enabled;
     cs.track = maxGpxEnabled();
     static char trackText[16];
-    switch (maxGpxState()) {
-    case GpxState::OFF:
-        cs.trackText = "SPENTA";
-        break;
-    case GpxState::NO_CARD:
-        cs.trackText = "NO SD";
-        break;
-    case GpxState::WAITING_FIX:
-        cs.trackText = "CERCO GPS";
-        break;
-    case GpxState::RECORDING:
-        snprintf(trackText, sizeof(trackText), "REC %lu", (unsigned long)maxGpxPoints());
-        cs.trackText = trackText;
-        break;
-    case GpxState::CARD_ERROR:
-        cs.trackText = "ERRORE SD";
-        break;
-    }
+    maxGpxStatusText(trackText, sizeof(trackText), false);
+    cs.trackText = trackText;
     cs.confirm = confirm;
     cs.bootReason = tDeckMaxBootReason(&cs.crashes);
     cs.lastThread = tDeckMaxLastThread();

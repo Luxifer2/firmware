@@ -9,10 +9,14 @@
 #include "graphics/niche/Inputs/TwoButton.h"
 // Applets
 #include "graphics/niche/InkHUD/Applets/Bases/Map/SDMapTiles.h"
+#include "graphics/niche/InkHUD/Applets/Max/ArchiveApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/ControlsApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/HomeApplet.h"
+#include "graphics/niche/InkHUD/Applets/Max/MaxHunter.h"
 #include "graphics/niche/InkHUD/Applets/Max/MaxTrack.h"
+#include "graphics/niche/InkHUD/Applets/Max/MaxUi.h"
 #include "graphics/niche/InkHUD/Applets/Max/RadarApplet.h"
+#include "graphics/niche/InkHUD/Applets/Max/ReaderApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/AllMessage/AllMessageApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/DM/DMApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/FavoritesMap/FavoritesMapApplet.h"
@@ -70,9 +74,20 @@ void setupNicheGraphics()
     inkhud->addApplet("Home", new InkHUD::HomeApplet, true, false);
     inkhud->addApplet("Controlli", new InkHUD::ControlsApplet, true, false);
     inkhud->addApplet("Radar", new InkHUD::RadarApplet, true, false);
-    InkHUD::maxGpxBegin(); // GPX track on the microSD
+    inkhud->addApplet("Archivio", new InkHUD::ArchiveApplet, true, false);
+    inkhud->addApplet("Lettore", new InkHUD::ReaderApplet, true, false);
+    InkHUD::maxGpxBegin();    // GPX track on the microSD
+    InkHUD::maxHunterBegin(); // node hunter on the microSD
 
     inkhud->begin();
+
+    // The screens reached from the home screen must stay active, even with settings saved by an older build
+    for (uint8_t i : {MaxUi::A_HOME, MaxUi::A_CONTROLS, MaxUi::A_RADAR, MaxUi::A_ARCHIVE, MaxUi::A_READER}) {
+        if (i < inkhud->userApplets.size() && !inkhud->userApplets.at(i)->isActive()) {
+            settings.userApplets.active[i] = true;
+            inkhud->userApplets.at(i)->activate();
+        }
+    }
     settings.optionalMenuItems.backlight = false;
     settings.joystick.enabled = false;
     settings.joystick.alignment = (4 - settings.rotation) % 4;

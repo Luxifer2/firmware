@@ -75,8 +75,8 @@ bool InkHUD::HomeApplet::onTouchPoint(uint16_t x, uint16_t y, bool longPress)
     case MaxUi::T_CONTROLS:
         inkhud->showApplet(MaxUi::A_CONTROLS);
         return true;
-    case MaxUi::T_OPTIONS:
-        inkhud->openMenu();
+    case MaxUi::T_ARCHIVE:
+        inkhud->showApplet(MaxUi::A_ARCHIVE);
         return true;
     case MaxUi::T_LOCK:
         LockApplet::lock(inkhud);

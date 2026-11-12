@@ -274,6 +274,27 @@ uint32_t NicheGraphics::InkHUD::maxGpxPoints()
     return logger ? logger->points : 0;
 }
 
+void NicheGraphics::InkHUD::maxGpxStatusText(char *buf, size_t n, bool longForm)
+{
+    switch (maxGpxState()) {
+    case GpxState::OFF:
+        snprintf(buf, n, "SPENTA");
+        break;
+    case GpxState::NO_CARD:
+        snprintf(buf, n, "NO SD");
+        break;
+    case GpxState::WAITING_FIX:
+        snprintf(buf, n, "CERCO GPS");
+        break;
+    case GpxState::RECORDING:
+        snprintf(buf, n, longForm ? "REC %lu PUNTI" : "REC %lu", (unsigned long)maxGpxPoints());
+        break;
+    case GpxState::CARD_ERROR:
+        snprintf(buf, n, "ERRORE SD");
+        break;
+    }
+}
+
 bool NicheGraphics::InkHUD::maxSdCardMb(uint32_t &mb)
 {
 #ifdef HAS_SDCARD

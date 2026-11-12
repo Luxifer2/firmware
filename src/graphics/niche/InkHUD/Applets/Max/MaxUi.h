@@ -19,7 +19,19 @@ constexpr uint16_t K = 0; // black
 constexpr uint16_t W = 1; // white
 
 // Positions in the list of user applets (the order they are added in the variant's nicheGraphics.h)
-enum AppletIndex : uint8_t { A_DMS = 1, A_CHANNEL0 = 2, A_POSITIONS = 4, A_RECENTS = 6, A_HEARD = 7, A_FAVORITES = 8, A_HOME = 9, A_CONTROLS = 10, A_RADAR = 11 };
+enum AppletIndex : uint8_t {
+    A_DMS = 1,
+    A_CHANNEL0 = 2,
+    A_POSITIONS = 4,
+    A_RECENTS = 6,
+    A_HEARD = 7,
+    A_FAVORITES = 8,
+    A_HOME = 9,
+    A_CONTROLS = 10,
+    A_RADAR = 11,
+    A_ARCHIVE = 12,
+    A_READER = 13
+};
 
 enum Font : uint8_t { SMALL = 0, MEDIUM = 1, LARGE = 2 };
 enum Align : uint8_t { LEFT = 0, CENTER = 1, RIGHT = 2 };
@@ -510,7 +522,7 @@ template <class G> void divider(G &g, int x0, int x1, int y, uint16_t c)
 // ------------------------------------------------------------------------------------------------
 
 // Eight hexagons in a honeycomb: three, two, three
-enum Tile : uint8_t { T_MESSAGES, T_DIRECT, T_NODES, T_MAP, T_FAVORITES, T_CONTROLS, T_OPTIONS, T_LOCK, T_COUNT };
+enum Tile : uint8_t { T_MESSAGES, T_DIRECT, T_NODES, T_MAP, T_FAVORITES, T_CONTROLS, T_ARCHIVE, T_LOCK, T_COUNT };
 
 struct HomeLayout {
     int hexR;
@@ -563,6 +575,19 @@ inline bool homeMenuAt(int w, int h, int x, int y)
 {
     const HomeLayout L = homeLayout(w, h);
     return (x - L.menuCx) * (x - L.menuCx) + (y - L.menuCy) * (y - L.menuCy) <= 20 * 20;
+}
+
+// MicroSD card (archive icon): a card with a clipped corner and its contacts
+template <class G> void iconSdCard(G &g, int cx, int cy, uint16_t c)
+{
+    const int l = cx - 8, t = cy - 10, r = cx + 8, b = cy + 10;
+    g.drawLine(l + 6, t, r, t, c);
+    g.drawLine(r, t, r, b, c);
+    g.drawLine(r, b, l, b, c);
+    g.drawLine(l, b, l, t + 6, c);
+    g.drawLine(l, t + 6, l + 6, t, c);
+    for (int i = 0; i < 4; i++)
+        g.fillRect(l + 5 + i * 3, t + 3, 2, 5, c);
 }
 
 // Sliders (controls icon): three lines with knobs
@@ -694,7 +719,7 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
     divider(g, 8, w - 8, sy + 21, K);
 
     // --- hexagon tiles
-    static const char *labels[T_COUNT] = {"CHAT", "POSTA", "NODI", "RADAR", "AMICI", "CONTROLLI", "OPZIONI", "BLOCCA"};
+    static const char *labels[T_COUNT] = {"CHAT", "POSTA", "NODI", "RADAR", "AMICI", "CONTROLLI", "ARCHIVIO", "BLOCCA"};
     for (int i = 0; i < T_COUNT; i++) {
         const int cx = L.hexCx[i], cy = L.hexCy[i];
         hex(g, cx, cy, L.hexR - 2, K);
@@ -719,8 +744,8 @@ template <class G> void renderHome(G &g, int w, int h, const Info &in)
         case T_CONTROLS:
             iconSliders(g, cx, iy + 1, K);
             break;
-        case T_OPTIONS:
-            iconGear(g, cx, iy, K);
+        case T_ARCHIVE:
+            iconSdCard(g, cx, iy, K);
             break;
         case T_LOCK:
             iconPadlock(g, cx, iy + 2, 11, true, K);
@@ -1394,6 +1419,112 @@ template <class G> void renderBadge(G &g, int w, int h, const Info &in, const Ba
         snprintf(s, sizeof(s), "%s %s", d, in.baseDist > 15 ? compassName(in.baseBearing) : "");
         g.txt(w / 2 + 24, 253, in.baseDist > 15 ? s : "ALLA BASE", SMALL, LEFT, MIDDLE, K);
     }
+}
+
+// ------------------------------------------------------------------------------------------------
+// Archive: what is on the microSD card (diary, text files, node hunter, GPX tracks)
+// ------------------------------------------------------------------------------------------------
+
+enum ArchiveRow : uint8_t { R_NOTE, R_DIARY, R_FILES, R_NODES, R_TRACKS, R_COUNT };
+
+struct Archive {
+    bool sd = false;
+    uint32_t sdMb = 0;
+    uint32_t notes = 0;
+    uint32_t textFiles = 0;
+    uint32_t nodesTotal = 0, nodesNew = 0;
+    const char *track = "";
+};
+
+inline int archiveRowTop(int i)
+{
+    return 50 + i * 46;
+}
+
+// Which row (if any) is at this point
+inline int archiveRowAt(int w, int x, int y)
+{
+    for (int i = 0; i < R_COUNT; i++)
+        if (x >= 8 && x < w - 8 && y >= archiveRowTop(i) && y < archiveRowTop(i) + 42)
+            return i;
+    return -1;
+}
+
+template <class G> void iconBook(G &g, int cx, int cy, uint16_t c)
+{
+    g.drawRect(cx - 10, cy - 8, 10, 16, c);
+    g.drawRect(cx, cy - 8, 10, 16, c);
+    for (int i = 0; i < 3; i++) {
+        g.drawLine(cx - 8, cy - 4 + i * 4, cx - 3, cy - 4 + i * 4, c);
+        g.drawLine(cx + 2, cy - 4 + i * 4, cx + 7, cy - 4 + i * 4, c);
+    }
+}
+
+template <class G> void iconPencil(G &g, int cx, int cy, uint16_t c)
+{
+    for (int d = -1; d <= 1; d++)
+        g.drawLine(cx - 7 + d, cy + 7, cx + 6 + d, cy - 6, c);
+    g.drawLine(cx - 9, cy + 9, cx - 7, cy + 4, c);
+    g.drawLine(cx - 9, cy + 9, cx - 4, cy + 7, c);
+}
+
+template <class G> void renderArchive(G &g, int w, int h, const Archive &a)
+{
+    g.fillRect(0, 0, w, h, W);
+    brackets(g, 2, 2, w - 4, h - 4, 10, K);
+
+    // title, with a hexagon that brings you home
+    hex(g, 22, 22, 13, K);
+    g.fillRect(19, 19, 7, 7, K);
+    g.txt(42, 22, "ARCHIVIO", MEDIUM, LEFT, MIDDLE, K);
+    divider(g, 8, w - 8, 41, K);
+
+    static const char *titles[R_COUNT] = {"NUOVA NOTA", "LEGGI DIARIO", "FILE DI TESTO", "NODI CATTURATI", "TRACCE GPX"};
+    const bool action[R_COUNT] = {true, true, true, false, false};
+    char sub[48];
+    for (int i = 0; i < R_COUNT; i++) {
+        const int top = archiveRowTop(i);
+        if (action[i]) {
+            g.drawRect(8, top, w - 16, 42, K);
+            g.drawRect(9, top + 1, w - 18, 40, K);
+            g.txt(w - 18, top + 21, ">", MEDIUM, CENTER, MIDDLE, K);
+        } else {
+            g.drawLine(8, top + 41, w - 8, top + 41, K);
+        }
+        const int ix = 26, iy = top + 21;
+        switch (i) {
+        case R_NOTE:
+            iconPencil(g, ix, iy, K);
+            snprintf(sub, sizeof(sub), "%lu NOTE SALVATE", (unsigned long)a.notes);
+            break;
+        case R_DIARY:
+            iconBook(g, ix, iy, K);
+            snprintf(sub, sizeof(sub), "APRE IL DIARIO");
+            break;
+        case R_FILES:
+            iconBook(g, ix, iy, K);
+            snprintf(sub, sizeof(sub), "%lu FILE .TXT", (unsigned long)a.textFiles);
+            break;
+        case R_NODES:
+            iconNodes(g, ix, iy, K);
+            snprintf(sub, sizeof(sub), "%lu IN TUTTO, %lu OGGI", (unsigned long)a.nodesTotal, (unsigned long)a.nodesNew);
+            break;
+        case R_TRACKS:
+            iconTrack(g, ix, iy, K);
+            snprintf(sub, sizeof(sub), "%s", a.track);
+            break;
+        }
+        g.txt(46, top + 14, titles[i], MEDIUM, LEFT, MIDDLE, K);
+        g.txt(46, top + 31, sub, SMALL, LEFT, MIDDLE, K);
+    }
+
+    char line[40];
+    if (a.sd)
+        snprintf(line, sizeof(line), "MICROSD %lu,%lu GB", (unsigned long)(a.sdMb / 1024),
+                 (unsigned long)((a.sdMb % 1024) * 10 / 1024));
+    else
+        snprintf(line, sizeof(line), "MICROSD ASSENTE");
+    g.txt(w / 2, h - 14, line, SMALL, CENTER, MIDDLE, K);
 }
 
 } // namespace MaxUi

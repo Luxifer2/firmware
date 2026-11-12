@@ -17,6 +17,7 @@
 #include "graphics/niche/InkHUD/Applets/Max/BootApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/LockApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/MaxUi.h"
+#include "graphics/niche/InkHUD/Applets/Max/NoteApplet.h"
 #endif
 
 void attachTDeckProTouchInterrupt();
@@ -42,6 +43,7 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
     // 0 = heart, 1 = speech bubble, 2 = arrow. Outside menus they are fixed shortcuts:
     //   heart:  friends (favourites map; recent nodes if the map is not enabled)
     //   bubble: chat (channel 0); pressed again inside a chat: write a message
+    //   bubble held for 1.5 s: new diary note on the microSD card
     //   arrow:  home screen (the side button moves on to the next screen)
     //   arrow held for 1.5 s: screen and keyboard lights on / off
     //   heart held for 1.5 s (or tapped twice): lock / unlock the screen
@@ -81,6 +83,8 @@ class TDeckProInkHUDInput : public Observer<const InputEvent *>
         if (event == TDeckMaxKeyEvent::HOLD) {
             if (id == 2 && !typing && !systemHandlingInput)
                 tDeckProToggleBacklights();
+            else if (id == 1 && !typing && !systemHandlingInput)
+                NicheGraphics::InkHUD::NoteApplet::open(hud);
             return;
         }
 

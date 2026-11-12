@@ -164,7 +164,7 @@ void InkHUD::TipsApplet::onRender(bool full)
 #if defined(T_DECK_MAX)
         drawBullet("Tasti sotto lo schermo");
         drawBullet("- cuore: mappa preferiti. Tenuto premuto: blocca o sblocca.");
-        drawBullet("- fumetto: chat. Premuto di nuovo nella chat: scrivi.");
+        drawBullet("- fumetto: chat. Premuto di nuovo nella chat: scrivi. Tenuto premuto: nota nel diario.");
         drawBullet("- freccia: Home. Tenuta premuta: luci.");
         drawBullet("Tasto laterale: schermata successiva.");
         drawBullet("Menu: icona in alto a destra.");
