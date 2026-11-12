@@ -816,7 +816,7 @@ template <class G> void renderLock(G &g, int w, int h, const Info &in)
 // Controls screen: square tiles with quick switches
 // ------------------------------------------------------------------------------------------------
 
-enum Control : uint8_t { C_SCREEN_LIGHT, C_KEY_LIGHT, C_VIBRATION, C_GPS, C_BLUETOOTH, C_WIFI, C_LOCK, C_HOME, C_COUNT };
+enum Control : uint8_t { C_SCREEN_LIGHT, C_KEY_LIGHT, C_VIBRATION, C_GPS, C_BLUETOOTH, C_WIFI, C_TRACK, C_LOCK, C_COUNT };
 
 struct Controls {
     bool screenLight = false;
@@ -825,6 +825,8 @@ struct Controls {
     bool gps = false;
     bool bluetooth = false;
     bool wifi = false;
+    bool track = false;         // GPX track on the microSD switched on
+    const char *trackText = ""; // what the track is doing: SPENTA, NO SD, CERCO GPS, REC 12, ERRORE SD
     int8_t confirm = -1; // control waiting for a second tap (restarts the device)
     const char *bootReason = nullptr;
     uint32_t crashes = 0;
@@ -890,6 +892,17 @@ template <class G> void iconWifi(G &g, int cx, int cy, uint16_t c)
     g.drawCircleHelper(cx, cy + 6, 14, 3, c);
 }
 
+// A dotted path ending in a flag
+template <class G> void iconTrack(G &g, int cx, int cy, uint16_t c)
+{
+    static const int8_t px[] = {-10, -7, -4, -2, 1, 4};
+    static const int8_t py[] = {8, 5, 6, 2, 1, -2};
+    for (int i = 0; i < 6; i++)
+        g.fillRect(cx + px[i] - 1, cy + py[i] - 1, 2, 2, c);
+    g.drawLine(cx + 6, cy + 1, cx + 6, cy - 11, c);
+    g.fillTriangle(cx + 7, cy - 11, cx + 7, cy - 5, cx + 12, cy - 8, c);
+}
+
 template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
 {
     g.fillRect(0, 0, w, h, W);
@@ -902,8 +915,8 @@ template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
     iconMenu(g, w - 58, 17, 13, K);
     divider(g, 8, w - 8, 41, K);
 
-    static const char *names[C_COUNT] = {"SCHERMO", "TASTIERA", "VIBRA", "GPS", "BLUETOOTH", "WIFI", "BLOCCA", "HOME"};
-    const bool on[C_COUNT] = {cs.screenLight, cs.keyLight, cs.vibration, cs.gps, cs.bluetooth, cs.wifi, false, false};
+    static const char *names[C_COUNT] = {"SCHERMO", "TASTIERA", "VIBRA", "GPS", "BLUETOOTH", "WIFI", "TRACCIA", "BLOCCA"};
+    const bool on[C_COUNT] = {cs.screenLight, cs.keyLight, cs.vibration, cs.gps, cs.bluetooth, cs.wifi, cs.track, false};
 
     for (int i = 0; i < C_COUNT; i++) {
         const ControlRect r = controlRect(w, i);
@@ -939,9 +952,8 @@ template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
         case C_LOCK:
             iconPadlock(g, ix, iy + 2, 9, true, fg);
             break;
-        case C_HOME:
-            hex(g, ix, iy, 11, fg);
-            g.fillRect(ix - 3, iy - 3, 7, 7, fg);
+        case C_TRACK:
+            iconTrack(g, ix, iy, fg);
             break;
         }
         const int tx = r.x + 34;
@@ -952,6 +964,9 @@ template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
             g.txt(tx, r.y + 11, "LUCE", SMALL, LEFT, MIDDLE, fg);
             g.txt(tx, r.y + 26, names[i], SMALL, LEFT, MIDDLE, fg);
             g.txt(tx, r.y + 41, on[i] ? "ACCESA" : "SPENTA", SMALL, LEFT, MIDDLE, fg);
+        } else if (i == C_TRACK) {
+            g.txt(tx, r.y + 17, names[i], SMALL, LEFT, MIDDLE, fg);
+            g.txt(tx, r.y + 35, cs.trackText, SMALL, LEFT, MIDDLE, fg);
         } else {
             g.txt(tx, r.y + (toggle ? 17 : 26), names[i], SMALL, LEFT, MIDDLE, fg);
             if (toggle)
@@ -1254,7 +1269,7 @@ struct BootLine {
 };
 
 struct Boot {
-    static constexpr int MAX_LINES = 8;
+    static constexpr int MAX_LINES = 9;
     BootLine lines[MAX_LINES];
     int n = 0;
     int shown = 0; // lines revealed so far
@@ -1281,7 +1296,7 @@ template <class G> void renderBoot(G &g, int w, int h, const Boot &b)
     g.txt(42, 32, "controllo moduli", SMALL, LEFT, MIDDLE, K);
     divider(g, 8, w - 8, 45, K);
 
-    const int top = 62, step = 20;
+    const int top = 62, step = 19;
     for (int i = 0; i < b.n && i < b.shown; i++) {
         const BootLine &L = b.lines[i];
         const int y = top + i * step;

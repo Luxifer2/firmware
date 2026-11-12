@@ -11,6 +11,7 @@
 #include "graphics/niche/InkHUD/Applets/Bases/Map/SDMapTiles.h"
 #include "graphics/niche/InkHUD/Applets/Max/ControlsApplet.h"
 #include "graphics/niche/InkHUD/Applets/Max/HomeApplet.h"
+#include "graphics/niche/InkHUD/Applets/Max/MaxTrack.h"
 #include "graphics/niche/InkHUD/Applets/Max/RadarApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/AllMessage/AllMessageApplet.h"
 #include "graphics/niche/InkHUD/Applets/User/DM/DMApplet.h"
@@ -69,6 +70,7 @@ void setupNicheGraphics()
     inkhud->addApplet("Home", new InkHUD::HomeApplet, true, false);
     inkhud->addApplet("Controlli", new InkHUD::ControlsApplet, true, false);
     inkhud->addApplet("Radar", new InkHUD::RadarApplet, true, false);
+    InkHUD::maxGpxBegin(); // GPX track on the microSD
 
     inkhud->begin();
     settings.optionalMenuItems.backlight = false;

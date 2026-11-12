@@ -5,6 +5,7 @@
 #include "./ControlsApplet.h"
 
 #include "./LockApplet.h"
+#include "./MaxTrack.h"
 #include "./MaxUi.h"
 #include "MeshService.h"
 #include "NodeDB.h"
@@ -49,6 +50,26 @@ void InkHUD::ControlsApplet::onRender(bool full)
 #endif
     cs.bluetooth = config.bluetooth.enabled;
     cs.wifi = config.network.wifi_enabled;
+    cs.track = maxGpxEnabled();
+    static char trackText[16];
+    switch (maxGpxState()) {
+    case GpxState::OFF:
+        cs.trackText = "SPENTA";
+        break;
+    case GpxState::NO_CARD:
+        cs.trackText = "NO SD";
+        break;
+    case GpxState::WAITING_FIX:
+        cs.trackText = "CERCO GPS";
+        break;
+    case GpxState::RECORDING:
+        snprintf(trackText, sizeof(trackText), "REC %lu", (unsigned long)maxGpxPoints());
+        cs.trackText = trackText;
+        break;
+    case GpxState::CARD_ERROR:
+        cs.trackText = "ERRORE SD";
+        break;
+    }
     cs.confirm = confirm;
     cs.bootReason = tDeckMaxBootReason(&cs.crashes);
     cs.lastThread = tDeckMaxLastThread();
@@ -154,9 +175,9 @@ bool InkHUD::ControlsApplet::onTouchPoint(uint16_t x, uint16_t y, bool longPress
         LockApplet::lock(inkhud);
         return true;
 
-    case MaxUi::C_HOME:
-        inkhud->showApplet(MaxUi::A_HOME);
-        return true;
+    case MaxUi::C_TRACK:
+        maxGpxSetEnabled(!maxGpxEnabled());
+        break;
     }
 
     requestUpdate(Drivers::EInk::UpdateTypes::FAST);

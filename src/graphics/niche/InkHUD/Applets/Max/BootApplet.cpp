@@ -4,6 +4,7 @@
 
 #include "./BootApplet.h"
 
+#include "./MaxTrack.h"
 #include "./MaxUi.h"
 #include "GPSStatus.h"
 #include "PowerStatus.h"
@@ -96,6 +97,15 @@ void InkHUD::BootApplet::check()
         addLine("OROLOGIO", v, MaxUi::CK_OK);
     } else {
         addLine("OROLOGIO", "DA GPS", MaxUi::CK_WARN);
+    }
+
+    // The microSD card is optional: without it only the GPX track is missing
+    uint32_t mb = 0;
+    if (maxSdCardMb(mb)) {
+        snprintf(v, sizeof(v), "%lu,%lu GB", (unsigned long)(mb / 1024), (unsigned long)((mb % 1024) * 10 / 1024));
+        addLine("MICROSD", v, MaxUi::CK_OK);
+    } else {
+        addLine("MICROSD", "ASSENTE", MaxUi::CK_WARN);
     }
 }
 
