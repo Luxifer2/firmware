@@ -149,9 +149,112 @@ void tDeckProTouchFeedback()
 }
 #endif
 
+// Why did we start? Shown on the controls screen, so restarts can be diagnosed without a computer.
+// The counter lives in RTC memory: it survives crashes and watchdog resets, and starts from zero at power-on.
+#include <esp_attr.h>
+#include <esp_system.h>
+#include <string.h>
+static constexpr uint32_t BOOT_MAGIC = 0x7DEC4A11;
+RTC_NOINIT_ATTR static uint32_t bootMagic;
+RTC_NOINIT_ATTR static uint32_t bootCrashes;
+
+// Which thread of the main loop was running, also kept in RTC memory: after a crash or a watchdog reset
+// the controls screen can name the thread the device stopped in.
+RTC_NOINIT_ATTR static char threadNote[24];
+RTC_NOINIT_ATTR static uint8_t threadNoteRunning;
+static char lastThread[32] = ""; // "IN name" / "DOPO name" from before the restart; empty after a clean start
+
+void tDeckMaxNoteThread(const char *name, bool running)
+{
+    if (running) {
+        strncpy(threadNote, name, sizeof(threadNote) - 1);
+        threadNote[sizeof(threadNote) - 1] = '\0';
+    }
+    threadNoteRunning = running;
+}
+
+const char *tDeckMaxLastThread()
+{
+    return lastThread;
+}
+
+// Called once from earlyInitVariant(), before any thread runs and overwrites the note
+static void keepLastThread()
+{
+    const esp_reset_reason_t r = esp_reset_reason();
+    const bool crashed = r == ESP_RST_PANIC || r == ESP_RST_INT_WDT || r == ESP_RST_TASK_WDT || r == ESP_RST_WDT;
+    if (bootMagic == BOOT_MAGIC && crashed) {
+        threadNote[sizeof(threadNote) - 1] = '\0';
+        bool printable = threadNote[0] != '\0';
+        for (const char *c = threadNote; *c; c++)
+            printable = printable && *c >= 0x20 && *c < 0x7F;
+        if (printable)
+            snprintf(lastThread, sizeof(lastThread), "%s %s", threadNoteRunning ? "IN" : "DOPO", threadNote);
+    }
+    threadNote[0] = '\0';
+    threadNoteRunning = 0;
+}
+
+const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn)
+{
+    static const char *text = nullptr;
+    static uint32_t crashes = 0;
+    if (!text) {
+        const esp_reset_reason_t r = esp_reset_reason();
+        if (bootMagic != BOOT_MAGIC || r == ESP_RST_POWERON) {
+            bootMagic = BOOT_MAGIC;
+            bootCrashes = 0;
+        }
+        switch (r) {
+        case ESP_RST_POWERON:
+            text = "ACCENSIONE";
+            break;
+        case ESP_RST_SW:
+            text = "RIAVVIO NORMALE";
+            break;
+        case ESP_RST_PANIC:
+            text = "ERRORE SOFTWARE";
+            bootCrashes++;
+            break;
+        case ESP_RST_TASK_WDT:
+            text = "BLOCCO 90 S"; // main loop (or a whole core) stuck for the 90 s app watchdog
+            bootCrashes++;
+            break;
+        case ESP_RST_INT_WDT:
+            text = "BLOCCO INTERRUPT";
+            bootCrashes++;
+            break;
+        case ESP_RST_WDT:
+            text = "BLOCCO (WATCHDOG)";
+            bootCrashes++;
+            break;
+        case ESP_RST_BROWNOUT:
+            text = "CALO DI TENSIONE";
+            bootCrashes++;
+            break;
+        case ESP_RST_DEEPSLEEP:
+            text = "RISVEGLIO DAL SONNO";
+            break;
+        case ESP_RST_EXT:
+            text = "TASTO RESET";
+            break;
+        default:
+            text = "ALTRO";
+            break;
+        }
+        crashes = bootCrashes;
+    }
+    if (crashesSincePowerOn)
+        *crashesSincePowerOn = crashes;
+    return text;
+}
+
 // Runs at the very start of setup(), before the radio, GPS, touch and keyboard are touched. No LOG_* here.
 void earlyInitVariant()
 {
+    keepLastThread();
+    tDeckMaxBootReason(nullptr); // count this start now, even if the controls screen is never opened
+
     Wire.begin(I2C_SDA, I2C_SCL);
 
     // Levels first, then direction, so nothing glitches when the pins become outputs.
@@ -181,61 +284,6 @@ bool tDeckMaxHapticOk()
 {
     tDeckProIsV11(); // brings the driver up the first time
     return hapticReady;
-}
-
-// Why did we start? Shown on the controls screen, so restarts can be diagnosed without a computer.
-// The counter lives in RTC memory: it survives crashes and watchdog resets, and starts from zero at power-on.
-#include <esp_attr.h>
-#include <esp_system.h>
-RTC_NOINIT_ATTR static uint32_t bootMagic;
-RTC_NOINIT_ATTR static uint32_t bootCrashes;
-
-const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn)
-{
-    static const char *text = nullptr;
-    static uint32_t crashes = 0;
-    if (!text) {
-        const esp_reset_reason_t r = esp_reset_reason();
-        if (bootMagic != 0x7DEC4A11 || r == ESP_RST_POWERON) {
-            bootMagic = 0x7DEC4A11;
-            bootCrashes = 0;
-        }
-        switch (r) {
-        case ESP_RST_POWERON:
-            text = "ACCENSIONE";
-            break;
-        case ESP_RST_SW:
-            text = "RIAVVIO NORMALE";
-            break;
-        case ESP_RST_PANIC:
-            text = "ERRORE SOFTWARE";
-            bootCrashes++;
-            break;
-        case ESP_RST_INT_WDT:
-        case ESP_RST_TASK_WDT:
-        case ESP_RST_WDT:
-            text = "BLOCCO (WATCHDOG)";
-            bootCrashes++;
-            break;
-        case ESP_RST_BROWNOUT:
-            text = "CALO DI TENSIONE";
-            bootCrashes++;
-            break;
-        case ESP_RST_DEEPSLEEP:
-            text = "RISVEGLIO DAL SONNO";
-            break;
-        case ESP_RST_EXT:
-            text = "TASTO RESET";
-            break;
-        default:
-            text = "ALTRO";
-            break;
-        }
-        crashes = bootCrashes;
-    }
-    if (crashesSincePowerOn)
-        *crashesSincePowerOn = crashes;
-    return text;
 }
 
 #endif // T_DECK_MAX

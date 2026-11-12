@@ -20,6 +20,8 @@ extern char tDeckMaxDiag[48]; // last key event seen (diagnostics)
 bool tDeckMaxGetLight(uint8_t which);          // 0 = screen light, 1 = keyboard light
 void tDeckMaxSetLight(uint8_t which, bool on);
 const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn); // why the device last started
+void tDeckMaxNoteThread(const char *name, bool running);       // called around every main-loop thread run
+const char *tDeckMaxLastThread();                              // thread the device stopped in before a crash restart, or ""
 extern bool tDeckMaxTouchOk; // touch controller answered at boot
 bool tDeckMaxHapticOk();     // vibration driver answered
 #endif

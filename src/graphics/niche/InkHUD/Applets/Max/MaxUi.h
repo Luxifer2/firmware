@@ -828,6 +828,7 @@ struct Controls {
     int8_t confirm = -1; // control waiting for a second tap (restarts the device)
     const char *bootReason = nullptr;
     uint32_t crashes = 0;
+    const char *lastThread = nullptr; // thread it stopped in before a crash restart
 };
 
 struct ControlRect {
@@ -957,10 +958,12 @@ template <class G> void renderControls(G &g, int w, int h, const Controls &cs)
                 g.txt(tx, r.y + 35, on[i] ? "ACCESO" : "SPENTO", SMALL, LEFT, MIDDLE, fg);
         }
     }
-    char line[48];
+    char line[64];
     snprintf(line, sizeof(line), "Ultimo avvio: %s", cs.bootReason ? cs.bootReason : "-");
     g.txt(w / 2, h - 22, line, SMALL, CENTER, MIDDLE, K);
-    if (cs.crashes)
+    if (cs.crashes && cs.lastThread && cs.lastThread[0])
+        snprintf(line, sizeof(line), "Errori: %lu - %s", (unsigned long)cs.crashes, cs.lastThread);
+    else if (cs.crashes)
         snprintf(line, sizeof(line), "Riavvii per errore: %lu", (unsigned long)cs.crashes);
     else
         snprintf(line, sizeof(line), "Nessun errore dall'accensione");

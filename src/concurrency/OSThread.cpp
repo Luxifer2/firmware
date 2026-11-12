@@ -91,7 +91,13 @@ void OSThread::run()
 #endif
     currentThread = this;
     fromNowDuringRun = false;
+#if defined(T_DECK_MAX) && defined(MESHTASTIC_INCLUDE_INKHUD)
+    tDeckMaxNoteThread(ThreadName.c_str(), true);
+#endif
     auto newDelay = runOnce();
+#if defined(T_DECK_MAX) && defined(MESHTASTIC_INCLUDE_INKHUD)
+    tDeckMaxNoteThread(ThreadName.c_str(), false);
+#endif
 #ifdef DEBUG_HEAP
     auto newHeap = memGet.getFreeHeap();
     if (newHeap < heap)

@@ -51,6 +51,7 @@ void InkHUD::ControlsApplet::onRender(bool full)
     cs.wifi = config.network.wifi_enabled;
     cs.confirm = confirm;
     cs.bootReason = tDeckMaxBootReason(&cs.crashes);
+    cs.lastThread = tDeckMaxLastThread();
     MaxUi::renderControls(*this, width(), height(), cs);
 }
 
