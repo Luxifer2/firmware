@@ -523,6 +523,10 @@ esp_sleep_wakeup_cause_t doLightSleep(uint64_t sleepMsec) // FIXME, use a more r
     gpio_wakeup_enable((gpio_num_t)ROTARY_PRESS, GPIO_INTR_LOW_LEVEL);
 #endif
 #ifdef KB_INT
+#ifdef T_DECK_PRO
+    // The TCA8418 is polled, so KB_INT has no handler: its interrupt must stay off while armed as a level.
+    gpio_intr_disable((gpio_num_t)KB_INT);
+#endif
 #if KB_INT_WAKE_ON_HIGH
     gpio_wakeup_enable((gpio_num_t)KB_INT, GPIO_INTR_HIGH_LEVEL);
 #else
@@ -564,9 +568,13 @@ esp_sleep_wakeup_cause_t doLightSleep(uint64_t sleepMsec) // FIXME, use a more r
 #endif
 #ifdef MOTION_WAKE_INT_PIN
     // Only arm motion wake when the user asked for it, otherwise every tilt costs a wakeup.
-    if (config.display.wake_on_tap_or_motion)
+    const bool motionWakeArmed = config.display.wake_on_tap_or_motion;
+    if (motionWakeArmed) {
+        // The driver's edge ISR cannot clear the sensor's level INT: mask it while armed as a level, as for LoRa.
+        gpio_intr_disable((gpio_num_t)MOTION_WAKE_INT_PIN);
         gpio_wakeup_enable((gpio_num_t)MOTION_WAKE_INT_PIN,
                            MOTION_WAKE_INT_ACTIVE_HIGH ? GPIO_INTR_HIGH_LEVEL : GPIO_INTR_LOW_LEVEL);
+    }
 #endif
     enableLoraInterrupt();
 #ifdef PMU_IRQ
@@ -620,6 +628,10 @@ esp_sleep_wakeup_cause_t doLightSleep(uint64_t sleepMsec) // FIXME, use a more r
 #endif
 #ifdef KB_INT
     gpio_wakeup_disable((gpio_num_t)KB_INT);
+#ifdef T_DECK_PRO
+    // Drop the level type: pinMode() keeps the current type and turns the interrupt on when it is not "none".
+    gpio_set_intr_type((gpio_num_t)KB_INT, GPIO_INTR_DISABLE);
+#endif
 #endif
 #ifdef BOARD_PCA9535_INT
     gpio_wakeup_disable((gpio_num_t)BOARD_PCA9535_INT);
@@ -654,6 +666,11 @@ esp_sleep_wakeup_cause_t doLightSleep(uint64_t sleepMsec) // FIXME, use a more r
 #ifdef MOTION_WAKE_INT_PIN
     // Unconditional: the config can have changed while we were asleep.
     gpio_wakeup_disable((gpio_num_t)MOTION_WAKE_INT_PIN);
+    if (motionWakeArmed) {
+        // Back to the edge the motion drivers attach on (rising when active high, falling when active low)
+        gpio_set_intr_type((gpio_num_t)MOTION_WAKE_INT_PIN, MOTION_WAKE_INT_ACTIVE_HIGH ? GPIO_INTR_POSEDGE : GPIO_INTR_NEGEDGE);
+        gpio_intr_enable((gpio_num_t)MOTION_WAKE_INT_PIN);
+    }
 #endif
 #if defined(LORA_DIO1) || defined(SX128X_DIO1)
     const int wokeDio1 = loraWakeDio1Pin(); // must match what enableLoraInterrupt() armed

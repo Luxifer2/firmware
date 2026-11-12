@@ -27,6 +27,7 @@ static constexpr uint8_t XL9555_REG_CFG1 = 0x07;
 static constexpr uint8_t XL9555_PORT0_RUN = 0xBE;
 static constexpr uint8_t XL9555_TOUCH_RST_BIT = 0x80;
 static constexpr uint8_t XL9555_PORT1_RUN = 0x02; // keyboard out of reset, audio routed to the ES8311
+static constexpr uint8_t XL9555_KB_RST_BIT = 0x02; // IO11
 
 static void xl9555Write(uint8_t reg, uint8_t value)
 {
@@ -151,6 +152,7 @@ void tDeckProTouchFeedback()
 
 // Why did we start? Shown on the controls screen, so restarts can be diagnosed without a computer.
 // The counter lives in RTC memory: it survives crashes and watchdog resets, and starts from zero at power-on.
+#include <driver/gpio.h>
 #include <esp_attr.h>
 #include <esp_system.h>
 #include <string.h>
@@ -191,8 +193,27 @@ static void keepLastThread()
         if (printable)
             snprintf(lastThread, sizeof(lastThread), "%s %s", threadNoteRunning ? "IN" : "DOPO", threadNote);
     }
-    threadNote[0] = '\0';
-    threadNoteRunning = 0;
+    // Until the first thread runs, a crash is a crash during startup
+    strncpy(threadNote, "AVVIO", sizeof(threadNote) - 1);
+    threadNote[sizeof(threadNote) - 1] = '\0';
+    threadNoteRunning = 1;
+}
+
+// A crash or software restart resets only the CPUs, so the wake pins keep their interrupt settings into the new boot.
+// A level type left there is switched on by the next pinMode() and storms the GPIO ISR: start them all from "none".
+static void clearWakePinInterrupts()
+{
+    const gpio_num_t pins[] = {
+        (gpio_num_t)BUTTON_PIN, (gpio_num_t)LORA_DIO1, (gpio_num_t)CST328_PIN_INT, (gpio_num_t)BHI260AP_INT,
+#ifdef KB_INT
+        (gpio_num_t)KB_INT,
+#endif
+    };
+    for (const gpio_num_t pin : pins) {
+        gpio_intr_disable(pin);
+        gpio_wakeup_disable(pin);
+        gpio_set_intr_type(pin, GPIO_INTR_DISABLE);
+    }
 }
 
 const char *tDeckMaxBootReason(uint32_t *crashesSincePowerOn)
@@ -254,6 +275,7 @@ void earlyInitVariant()
 {
     keepLastThread();
     tDeckMaxBootReason(nullptr); // count this start now, even if the controls screen is never opened
+    clearWakePinInterrupts();
 
     Wire.begin(I2C_SDA, I2C_SCL);
 
@@ -264,10 +286,12 @@ void earlyInitVariant()
     xl9555Write(XL9555_REG_CFG1, 0xF8); // IO10, IO11, IO12 are outputs, the rest stay inputs
     delay(10);
 
-    // Reset the touch controller
+    // Reset the touch controller and the keyboard: after a CPU-only restart they can still hold an interrupt asserted
     xl9555Write(XL9555_REG_OUT0, XL9555_PORT0_RUN & ~XL9555_TOUCH_RST_BIT);
+    xl9555Write(XL9555_REG_OUT1, XL9555_PORT1_RUN & ~XL9555_KB_RST_BIT);
     delay(20);
     xl9555Write(XL9555_REG_OUT0, XL9555_PORT0_RUN);
+    xl9555Write(XL9555_REG_OUT1, XL9555_PORT1_RUN);
     delay(60);
 
     pinMode(LORA_CS, OUTPUT);
